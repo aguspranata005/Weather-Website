@@ -1,0 +1,613 @@
+@import url('[https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap)');
+
+* {
+  font-family: 'Outfit', 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.container {
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.search-container {
+  position: relative;
+  flex-grow: 1;
+}
+
+.search-results {
+  position: absolute;
+  width: 100%;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Layout Grid Utama - Kiri dan Kanan */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.current-weather {
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 24px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.location-and-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 16px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-item .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.current-weather h2 {
+  margin: 0 0 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.current-temp-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.weather-icon {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 2;
+}
+
+.temp-desc-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.current-temp {
+  font-size: 80px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1;
+}
+
+.current-desc {
+  text-transform: capitalize;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container);
+  padding: 16px;
+  border-radius: 20px;
+  margin-top: 12px;
+  display: inline-block;
+}
+
+.description-of-weather {
+  align-self: flex-start;
+}
+
+.highlights {
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 24px;
+  border-radius: 24px;
+  flex: 1;
+}
+
+.highlights h2 {
+  margin: 0 0 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.highlight-item {
+  background-color: var(--md-sys-color-surface-container);
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.highlight-item .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--md-sys-color-primary);
+}
+
+.highlight-title {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+}
+
+.highlight-value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.forecast-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.forecast-card h2 {
+  margin: 0 0 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.hourly-forecast {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 16px;
+}
+
+.hour-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background-color: var(--md-sys-color-surface-container);
+  min-width: 80px;
+  text-align: center;
+}
+
+.hour-item p {
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.hour-time {
+    font-size: 14px;
+}
+
+.hour-temp {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.hour-wind-speed {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.hour-wind-direction-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.wind-details {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 4px;
+}
+
+.wind-details .material-symbols-outlined {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.wind-direction-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 50%; /* Membuatnya menjadi lingkaran */
+  margin: 4px 0;
+}
+
+.wind-direction-icon {
+  font-size: 24px;
+  color: var(--md-sys-color-primary);
+  /* Memberi animasi agar perputaran panah terlihat mulus */
+  transition: transform 0.3s ease-out;
+}
+
+
+.day-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.day-name {
+  flex-grow: 1;
+  color: var(--md-sys-color-on-surface);
+}
+
+.day-temp {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+  grid-column: 1 / -1;
+}
+
+.error-message {
+  color: var(--md-sys-color-on-error-container);
+  padding: 20px;
+  background-color: var(--md-sys-color-error-container);
+  border-radius: 16px;
+  grid-column: 1 / -1;
+}
+
+.error-message .material-symbols-outlined {
+  color: var(--md-sys-color-error);
+}
+
+.error-message p {
+  margin: 8px 0;
+}
+
+.location-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border: none;
+  border-radius: 24px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 140px;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.location-button:hover:not(:disabled) {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.location-button:disabled {
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: not-allowed;
+}
+
+.location-button .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.retry-button {
+  background-color: transparent;
+  color: var(--md-sys-color-on-error-container);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: var(--md-sys-color-surface-variant);
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner.large {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- Style untuk Kartu Kualitas Udara --- */
+.divider {
+  border: none;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin: 20px 0;
+}
+
+.air-quality-card {
+  background-color: var(--md-sys-color-surface-container);
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.aq-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+}
+
+.aq-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.aq-icon {
+  font-size: 28px;
+  color: var(--md-sys-color-primary);
+}
+
+.aq-value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.aq-components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.aq-component {
+  text-align: center;
+  background-color: var(--md-sys-color-surface-container-high);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.aq-component span {
+  font-size: 18px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.aq-component p {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.aq-component p span {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.hour-wind-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px; /* Mengurangi jarak antar elemen agar lebih compact */
+  padding: 12px 12px;
+  border-radius: 12px;
+  background-color: var(--md-sys-color-surface-container);
+  min-width: 80px;
+  text-align: center;
+}
+
+.hour-wind-item p {
+  margin: 0;
+}
+
+.hour-wind-item .hour-time {
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* --- Responsive Design --- */
+
+/* Breakpoint 1: Laptop Kecil & Tablet (Landscape) */
+@media (max-width: 1200px) {
+  .highlight-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .weather-icon {
+    width: 150px;
+    height: 150px;
+  }
+  .current-temp {
+    font-size: 70px;
+  }
+}
+
+/* Breakpoint 2: Tablet (Portrait) */
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+  .current-temp-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+  }
+  .temp-desc-wrapper {
+    align-items: center;
+  }
+  .description-of-weather {
+    align-self: center;
+  }
+  .location-and-date {
+    align-items: center;
+  }
+  .highlight-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .aq-components-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Breakpoint 3: Mobile (≤600px) */
+@media (max-width: 600px) {
+  .container {
+    padding: 8px;
+  }
+  .header {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .left-column,
+  .right-column {
+    gap: 12px;
+  }
+  .current-weather,
+  .highlights,
+  .forecast-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+  .weather-icon {
+    width: 80px;
+    height: 80px;
+  }
+  .current-temp {
+    font-size: 36px;
+  }
+  .highlight-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .aq-components-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hourly-forecast {
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  .day-item {
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .location-button {
+    min-width: 100px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .current-desc {
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+  .highlight-value {
+    font-size: 18px;
+  }
+  .forecast-card h2,
+  .highlights h2,
+  .current-weather h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Breakpoint 4: Very Small Devices (≤400px) */
+@media (max-width: 400px) {
+  .container {
+    padding: 4px;
+  }
+  .current-weather,
+  .highlights,
+  .forecast-card {
+    padding: 6px;
+    border-radius: 10px;
+  }
+  .weather-icon {
+    width: 50px;
+    height: 50px;
+  }
+  .current-temp {
+    font-size: 24px;
+  }
+  .location-button {
+    min-width: 80px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
