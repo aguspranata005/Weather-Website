@@ -1,11 +1,11 @@
-package main
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http" // Diperlukan untuk tipe http.Handler
+	"net/http"
 	"os"
 	"strings"
 
@@ -17,8 +17,6 @@ import (
 // --- KONFIGURASI & VARIABEL GLOBAL ---
 
 var openWeatherAPIKey string
-
-// Variabel global untuk menyimpan instance Gin router
 var router *gin.Engine
 
 // Konstanta untuk URL API OpenWeatherMap agar mudah dikelola.
@@ -29,7 +27,6 @@ const (
 )
 
 // --- STRUKTUR DATA (STRUCTS) ---
-// (Struktur ini tetap sama)
 
 type CleanedCity struct {
 	Name        string  `json:"name"`
@@ -89,62 +86,66 @@ type AirPollutionResponse struct {
 }
 
 
-// --- FUNGSI INIT UNTUK SETUP ROUTER ---
+// --- FUNGSI INIT & HANDLER UNTUK VERCEL ---
 
-// setupRouter menginisialisasi dan mengembalikan instance Gin Engine.
+// setupRouter menginisialisasi Gin router
 func setupRouter() *gin.Engine {
-	// Memuat environment variable dari file .env (hanya untuk lokal).
+	// Memuat environment variable (untuk pengembangan lokal)
 	if err := godotenv.Load(); err != nil {
-		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di Vercel.")
+		log.Println("Peringatan: file .env tidak ditemukan. Mengandalkan Environment Variables Vercel.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
-	if openWeatherAPIKey == "" {
-		log.Println("Peringatan: OPENWEATHER_API_KEY tidak diatur. API mungkin gagal di lokal.")
-	}
 	
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-    router.Use(gin.Logger(), gin.Recovery())
+	r := gin.New()
+    r.Use(gin.Logger(), gin.Recovery())
 
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true 
-	router.Use(cors.New(config))
+	r.Use(cors.New(config))
 
-	api := router.Group("/api")
+	api := r.Group("/api")
 	{
 		api.GET("/search", searchCitiesHandler)
 		api.GET("/weather", getWeatherHandler)
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
 	
-	router.GET("/", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"message": "Go API is running on Vercel Serverless Function"})
+	r.GET("/", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"message": "Go API (handler package) is running on Vercel"})
     })
     
-    return router
+    return r
 }
 
-// init() akan menjalankan setupRouter HANYA SEKALI saat fungsi dimuat.
+// init() menjalankan setupRouter HANYA SEKALI saat fungsi dimuat (cold start).
 func init() {
     router = setupRouter()
 }
 
-// Handler adalah entry point Serverless Go yang diekspor.
-// Fungsi ini memiliki signature http.HandlerFunc, yang paling kompatibel dengan Vercel.
-func Handler(w http.ResponseWriter, r *http.Request) {
-    // Arahkan request ke instance Gin router yang sudah diinisialisasi.
+// MainHandler adalah fungsi yang diekspor Vercel untuk menjalankan Serverless Function.
+// Nama ini dipilih karena "Handler" mungkin berbenturan dengan variabel Gin sebelumnya.
+func MainHandler(w http.ResponseWriter, r *http.Request) {
+    // Arahkan request ke instance Gin router
     router.ServeHTTP(w, r)
 }
 
-// main() tetap ada untuk menjalankan lokal (via 'go run main.go')
-func main() {
-	// Menjalankan router yang sudah diinisialisasi
-	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Gagal menjalankan server: %v", err)
-	}
-}
 
-// --- HANDLER FUNCTIONS (TETAP SAMA) ---
+// --- FUNGSI UTAMA LOKAL (UNTUK TESTING LOKAL) ---
+
+// Fungsi main() harus tetap dipertahankan dengan package main untuk kompilasi lokal.
+// Namun, karena kita mengubah package ke 'handler', kita harus membuat file terpisah
+// jika ingin menjalankan secara lokal dengan 'go run main.go'.
+// Jika Anda hanya menggunakan Vercel CLI (vercel dev), Vercel akan menangani ini.
+
+/*
+// JANGAN sertakan fungsi main() di sini, karena ini adalah package 'handler'.
+// Jika Anda ingin menjalankan lokal, buat file baru: backend/local/main.go
+// dengan package main dan panggil handler.MainHandler
+*/
+
+
+// --- HANDLER FUNCTIONS ---
 
 func searchCitiesHandler(c *gin.Context) {
 	query := c.Query("q")
