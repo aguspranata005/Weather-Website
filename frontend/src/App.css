@@ -89,11 +89,11 @@ body {
 /* --- Header & Search --- */
 .header {
   display: flex;
-  gap: 16px;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: space-between; /* <-- KUNCI UTAMA: space-between sebagai default */
+  gap: 16px;
   margin-bottom: 24px;
+  position: relative; /* <-- Diperlukan untuk Desktop */
 }
 
 /* --- GAYA BARU UNTUK DESKTOP --- */
@@ -104,8 +104,7 @@ body {
 }
 
 .mobile-search-toggle {
-  display: none;
-  /* Sembunyikan di desktop */
+  display: none; /* Sembunyikan di desktop & tablet */
 }
 
 /* --- AKHIR GAYA BARU DESKTOP --- */
@@ -622,7 +621,7 @@ body {
 @media (min-width: 901px) {
   .header {
     /* (Biarkan justify-content: center; dari style dasar) */
-    position: relative; /* Diperlukan untuk memposisikan tombol */
+    justify-content: center; /* Diperlukan untuk memposisikan tombol */
   }
 
   .search-container {
@@ -672,11 +671,7 @@ body {
 
   /* 1. Toggler Ikon (Search/Back) */
   .mobile-search-toggle {
-    display: flex;
-    /* Tampilkan di seluler */
-    align-items: center;
-    order: 1;
-    /* Selalu di paling kiri */
+    display: none;
   }
 
   .mobile-search-icon,
