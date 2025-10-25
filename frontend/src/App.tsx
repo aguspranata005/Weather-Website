@@ -52,7 +52,9 @@ interface AirPollutionResponse {
 }
 
 // --- Konfigurasi & Fungsi Helper ---
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? '/api'
+  : 'http://localhost:8080/api';
 const getWeatherIconUrl = (iconCode: string): string => {
   const baseUrl = "https://www.amcharts.com/wp-content/themes/amcharts4/css/img/icons/weather/animated/";
   let iconName: string;
