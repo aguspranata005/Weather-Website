@@ -1,203 +1,441 @@
-@import url('[https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap)');
+/* --- Global Styles & Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+/* --- VARIABEL MODE TERANG (DEFAULT) --- */
+:root {
+  --background: #f0f4f8;
+  --surface: #ffffff;
+  --on-surface: #1a1c1e;
+  --on-surface-variant: #43474e;
+  --primary: #00668b;
+  --on-primary: #ffffff;
+  --primary-container: #cce5ff;
+  --on-primary-container: #001e2c;
+  --outline: #73777f;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error-container: #410002;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Variabel AQI Mode Terang */
+  --aqi-baik-bg: #d7f0d8;
+  --aqi-baik-text: #0b200c;
+  --aqi-cukup-bg: #fff8c4;
+  --aqi-cukup-text: #262300;
+  --aqi-sedang-bg: #ffe0c2;
+  --aqi-sedang-text: #2b1100;
+  --aqi-buruk-bg: var(--error-container);
+  --aqi-buruk-text: var(--on-error-container);
+  --aqi-sangat-buruk-bg: #f8d7ff;
+  --aqi-sangat-buruk-text: #2f003b;
+  --aqi-unknown-bg: #e0e0e0;
+  --aqi-unknown-text: var(--on-surface);
+}
+
+/* --- VARIABEL MODE GELAP --- */
+html[data-theme="dark"] {
+  --background: #1d1f21;
+  /* <-- Latar belakang halaman SANGAT GELAP */
+  --surface: #282a2e;
+  /* <-- Latar belakang kartu/konten (sedikit lebih terang) */
+  --on-surface: #c5c8c6;
+  /* <-- Teks terang */
+  --on-surface-variant: #a0a0a0;
+  --primary: #4dabf7;
+  --on-primary: #000000;
+  --primary-container: #004a69;
+  --on-primary-container: #cce5ff;
+  --outline: #5f6368;
+  --error: #651321;
+  --error-container: #651321;
+  --on-error-container: #f2ada5;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* Variabel AQI Mode Gelap */
+  --aqi-baik-bg: #2a3d2b;
+  --aqi-baik-text: #a5d6a7;
+  --aqi-cukup-bg: #403c2a;
+  --aqi-cukup-text: #fff59d;
+  --aqi-sedang-bg: #40352a;
+  --aqi-sedang-text: #ffcc80;
+  --aqi-buruk-bg: var(--error-container);
+  --aqi-buruk-text: var(--on-error-container);
+  --aqi-sangat-buruk-bg: #3e2a40;
+  --aqi-sangat-buruk-text: #f48fb1;
+  --aqi-unknown-bg: #373737;
+  --aqi-unknown-text: var(--on-surface);
+}
 
 * {
-  font-family: 'Outfit', 'Segoe UI', 'Roboto', sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Albert Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--on-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
 }
 
+/* --- Header & Search --- */
 .header {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-bottom: 24px;
 }
 
+/* --- GAYA BARU UNTUK DESKTOP --- */
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.mobile-search-toggle {
+  display: none;
+  /* Sembunyikan di desktop */
+}
+
+/* --- AKHIR GAYA BARU DESKTOP --- */
+
 .search-container {
   position: relative;
-  flex-grow: 1;
+  width: 100%;
+  max-width: 500px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 48px 14px 48px;
+  font-size: 16px;
+  border-radius: 28px;
+  border: 1px solid var(--outline);
+  background-color: var(--surface);
+  color: var(--on-surface);
+  outline: none;
+  transition: box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-container);
 }
 
 .search-results {
   position: absolute;
   width: 100%;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  background-color: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px var(--shadow-color);
   z-index: 10;
-  margin-top: 4px;
+  margin-top: 8px;
   max-height: 300px;
   overflow-y: auto;
+  list-style: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.search-results li {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  color: var(--on-surface);
+}
+
+.search-results li:hover {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+.location-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: 50%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: auto;
+  transition: all 0.2s ease;
+  height: 48px;
+  width: 48px;
+}
+
+.location-button:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.location-button:disabled {
+  background-color: #c0c0c0;
+  cursor: not-allowed;
+}
+
+.location-button .material-symbols-rounded {
+  font-size: 20px;
+}
+
+/* Tombol Tema */
+.theme-toggle-button {
+  background-color: var(--surface);
+  color: var(--on-surface-variant);
+  border: 1px solid var(--outline);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle-button:hover:not(:disabled) {
+  background-color: var(--background);
+  opacity: 1;
+}
+
+.theme-toggle-button .material-symbols-rounded {
+  font-size: 20px;
+}
+
+/* Ikon di dalam Search Bar */
+.search-icon-left,
+.search-icon-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--on-surface-variant);
+  font-size: 22px;
+  z-index: 2;
+  transition: color 0.3s ease;
+}
+
+.search-icon-left {
+  left: 16px;
+  pointer-events: none;
+}
+
+.search-icon-right {
+  right: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.search-icon-right:hover {
+  color: var(--on-surface);
+}
+
+/* --- Dashboard Layout --- */
 .dashboard {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Layout Grid Utama - Kiri dan Kanan */
-.main-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 24px;
-  align-items: start;
+  grid-template-columns: 2fr 1fr;
 }
 
-.left-column {
+.main-content,
+.sidebar {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.current-weather {
-  background-color: var(--md-sys-color-surface-container-low);
+/* --- Cards --- */
+.current-weather,
+.highlights,
+.forecast-card {
+  background-color: var(--surface);
   padding: 24px;
   border-radius: 24px;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.current-weather h2,
+.highlights h2,
+.forecast-card h2 {
+  margin: 0 0 16px;
+  font-weight: 500;
+  color: var(--on-surface);
+  transition: color 0.3s ease;
+}
+
+/* Current Weather Card */
+.current-temp-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.weather-icon {
+  width: 180px;
+  height: 180px;
+  margin-left: auto;
+}
+
+.current-temp {
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--on-surface);
+  transition: color 0.3s ease;
+}
+
+.current-desc {
+  text-transform: capitalize;
+  font-size: 18px;
+  font-weight: 500;
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-top: 12px;
+  display: inline-block;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .location-and-date {
+  margin-top: 16px;
+  border-top: 1px solid var(--outline);
+  padding-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 8px 0 16px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 14px;
+  gap: 8px;
+  transition: border-color 0.3s ease;
 }
 
 .info-item {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--on-surface-variant);
+  transition: color 0.3s ease;
 }
 
-.info-item .material-symbols-outlined {
-  font-size: 16px;
+.info-item span {
+  transition: color 0.3s ease;
 }
 
-.current-weather h2 {
-  margin: 0 0 16px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-}
-
-.current-temp-container {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-grow: 1;
-  width: 100%;
-}
-
-.weather-icon {
-  width: 200px;
-  height: 200px;
-  flex-shrink: 2;
-}
-
-.temp-desc-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.current-temp {
-  font-size: 80px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--md-sys-color-on-surface);
-  line-height: 1;
-}
-
-.current-desc {
-  text-transform: capitalize;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-  background-color: var(--md-sys-color-surface-container);
-  padding: 16px;
-  border-radius: 20px;
-  margin-top: 12px;
-  display: inline-block;
-}
-
-.description-of-weather {
-  align-self: flex-start;
-}
-
-.highlights {
-  background-color: var(--md-sys-color-surface-container-low);
-  padding: 24px;
-  border-radius: 24px;
-  flex: 1;
-}
-
-.highlights h2 {
-  margin: 0 0 16px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-}
-
+/* Highlights Card */
 .highlight-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
 }
 
 .highlight-item {
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background);
   padding: 16px;
   border-radius: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: background-color 0.3s ease;
 }
 
-.highlight-item .material-symbols-outlined {
-  font-size: 24px;
-  color: var(--md-sys-color-primary);
+.highlight-item .material-symbols-rounded {
+  font-size: 28px;
+  color: var(--primary);
+  transition: color 0.3s ease;
 }
 
 .highlight-title {
-  margin: 0;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--on-surface-variant);
   font-size: 14px;
 }
 
 .highlight-value {
-  margin: 0;
   font-size: 24px;
   font-weight: 500;
-  color: var(--md-sys-color-on-surface);
+  color: var(--on-surface);
+  transition: color 0.3s ease;
 }
 
-.forecast-card {
-  background-color: var(--md-sys-color-surface-container-low);
-  padding: 24px;
-  border-radius: 24px;
+/* Air Quality Card */
+.air-quality-card {
+  background-color: var(--background);
+  padding: 16px;
+  border-radius: 16px;
+  transition: background-color 0.3s ease;
 }
 
-.forecast-card h2 {
-  margin: 0 0 16px;
+.forecast-card .air-quality-card {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.aq-title {
+  font-size: 14px;
+  color: var(--on-surface-variant);
   font-weight: 500;
-  color: var(--md-sys-color-on-surface);
+  margin-bottom: 12px;
 }
 
+.aq-summary {
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.aq-icon,
+.highlight-title-icon {
+  font-size: 32px;
+  color: var(--primary);
+  transition: color 0.3s ease;
+}
+
+.aq-value {
+  font-size: 18px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: block;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  text-align: center;
+}
+
+.aq-components-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.aq-component {
+  text-align: center;
+}
+
+.aq-component span {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.aq-component p {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--on-surface);
+  transition: color 0.3s ease;
+}
+
+/* Forecast Cards */
 .hourly-forecast {
-  display: flex;
-  overflow-x: auto;
-  gap: 16px;
+  display: grid;
+  /* <-- UBAH ke grid */
+  grid-template-columns: repeat(8, 1fr);
+  /* <-- TAMBAHKAN: 8 kolom sama lebar */
+  gap: 10px;
+  /* <-- SESUAIKAN jarak antar kolom jika perlu (misal: 10px) */
   padding-bottom: 16px;
+  /* Hapus overflow-x dan justify-content jika ada */
 }
 
 .hour-item {
@@ -207,169 +445,92 @@
   gap: 8px;
   padding: 12px;
   border-radius: 12px;
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background);
   min-width: 80px;
   text-align: center;
-}
-
-.hour-item p {
-  margin: 0;
-  color: var(--md-sys-color-on-surface);
+  transition: background-color 0.3s ease;
+  color: var(--on-surface);
 }
 
 .hour-time {
-    font-size: 14px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
 }
 
 .hour-temp {
-    font-size: 16px;
-    font-weight: 500;
-}
-
-.hour-wind-speed {
-  font-size: 14px;
   font-weight: 500;
-  color: var(--md-sys-color-on-surface);
 }
 
-.hour-wind-direction-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-}
 
-.wind-details {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--md-sys-color-on-surface-variant);
-    margin-top: 4px;
-}
-
-.wind-details .material-symbols-outlined {
-    font-size: 14px;
-    transition: transform 0.3s ease;
-}
-
-.wind-direction-icon-wrapper {
+.daily-forecast {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  height: 50px;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: 50%; /* Membuatnya menjadi lingkaran */
-  margin: 4px 0;
+  flex-direction: column;
+  gap: 8px;
 }
-
-.wind-direction-icon {
-  font-size: 24px;
-  color: var(--md-sys-color-primary);
-  /* Memberi animasi agar perputaran panah terlihat mulus */
-  transition: transform 0.3s ease-out;
-}
-
 
 .day-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 8px 0;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  color: var(--on-surface);
+}
+
+.day-item:hover {
+  background-color: var(--background);
 }
 
 .day-name {
   flex-grow: 1;
-  color: var(--md-sys-color-on-surface);
+  color: var(--on-surface-variant);
 }
 
 .day-temp {
   font-weight: 500;
-  color: var(--md-sys-color-on-surface);
 }
 
-.loading-container {
+/* --- Loading & Error States --- */
+.loading-container,
+.error-message {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 48px;
   gap: 16px;
-  color: var(--md-sys-color-on-surface-variant);
-  grid-column: 1 / -1;
+}
+
+.loading-container p {
+  color: var(--on-surface-variant);
+  transition: color 0.3s ease;
 }
 
 .error-message {
-  color: var(--md-sys-color-on-error-container);
-  padding: 20px;
-  background-color: var(--md-sys-color-error-container);
+  color: var(--on-error-container);
+  background-color: var(--error-container);
   border-radius: 16px;
-  grid-column: 1 / -1;
-}
-
-.error-message .material-symbols-outlined {
-  color: var(--md-sys-color-error);
-}
-
-.error-message p {
-  margin: 8px 0;
-}
-
-.location-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  border: none;
-  border-radius: 24px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  min-width: 140px;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.location-button:hover:not(:disabled) {
-  background-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.location-button:disabled {
-  background-color: var(--md-sys-color-surface-variant);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: not-allowed;
-}
-
-.location-button .material-symbols-outlined {
-  font-size: 18px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .retry-button {
   background-color: transparent;
-  color: var(--md-sys-color-on-error-container);
-  border: 1px solid var(--md-sys-color-outline);
+  color: var(--on-error-container);
+  border: 1px solid var(--outline);
   border-radius: 20px;
   padding: 8px 16px;
-  font-size: 14px;
   cursor: pointer;
   margin-top: 8px;
-  transition: all 0.2s ease;
-}
-
-.retry-button:hover {
-  background-color: var(--md-sys-color-surface-variant);
+  transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 .loading-spinner {
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
-  border-top: 2px solid currentColor;
+  border-top: 2px solid var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -381,233 +542,375 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  0% {
+    transform: rotate(0deg);
+  }
 
-/* --- Style untuk Kartu Kualitas Udara --- */
-.divider {
-  border: none;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  margin: 20px 0;
-}
-
-.air-quality-card {
-  background-color: var(--md-sys-color-surface-container);
-  padding: 16px;
-  border-radius: 16px;
-}
-
-.aq-title {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-weight: 500;
-}
-
-.aq-summary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.aq-icon {
-  font-size: 28px;
-  color: var(--md-sys-color-primary);
-}
-
-.aq-value {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-}
-
-.aq-components-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 12px;
-}
-
-.aq-component {
-  text-align: center;
-  background-color: var(--md-sys-color-surface-container-high);
-  padding: 8px;
-  border-radius: 8px;
-}
-
-.aq-component span {
-  font-size: 18px;
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.aq-component p {
-  margin: 4px 0 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-}
-
-.aq-component p span {
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.hour-wind-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px; /* Mengurangi jarak antar elemen agar lebih compact */
-  padding: 12px 12px;
-  border-radius: 12px;
-  background-color: var(--md-sys-color-surface-container);
-  min-width: 80px;
-  text-align: center;
-}
-
-.hour-wind-item p {
-  margin: 0;
-}
-
-.hour-wind-item .hour-time {
-  font-size: 14px;
-  color: var(--md-sys-color-on-surface-variant);
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* --- Responsive Design --- */
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
 
-/* Breakpoint 1: Laptop Kecil & Tablet (Landscape) */
-@media (max-width: 1200px) {
-  .highlight-grid {
-    grid-template-columns: repeat(2, 1fr);
+  /* --- [PERUBAHAN] Kode Responsif Ramalan 24 Jam ---
+    Mengubah ramalan per jam menjadi scroll horizontal
+    di layar tablet ke bawah (900px)
+  */
+  .hourly-forecast,
+  .hourly-wind-forecast {
+    display: flex;
+    /* 1. Gunakan flexbox agar item berjajar horizontal */
+    overflow-x: auto;
+    /* 2. Aktifkan scroll jika item melebihi lebar layar */
+    grid-template-columns: none;
+    /* 3. Nonaktifkan aturan grid 8-kolom */
+    padding-bottom: 16px;
+    /* 4. Beri padding bawah agar ada ruang untuk scrollbar */
   }
-  .weather-icon {
-    width: 150px;
-    height: 150px;
+
+  .hour-item {
+    flex-shrink: 0;
+    /* Mencegah item menyusut */
   }
-  .current-temp {
-    font-size: 70px;
+
+  .wind-hour-item {
+    min-width: 75px;
+    flex-shrink: 0;
+    /* Mencegah item menyusut */
+  }
+
+  /* (OPSIONAL) Atur gaya scrollbar */
+  .hourly-forecast::-webkit-scrollbar,
+  .hourly-wind-forecast::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .hourly-forecast::-webkit-scrollbar-track,
+  .hourly-wind-forecast::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .hourly-forecast::-webkit-scrollbar-thumb,
+  .hourly-wind-forecast::-webkit-scrollbar-thumb {
+    background-color: var(--outline);
+    border-radius: 3px;
+  }
+  /* --- Akhir Perubahan Responsif Ramalan 24 Jam --- */
+  .header {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+
+  /* Reset style desktop jika ada */
+  .search-container {
+    margin: 0;
+  }
+
+  /* Reset style desktop jika ada */
+  .header-actions {
+    position: static;
+  }
+
+}
+
+@media (min-width: 901px) {
+  .header {
+    /* (Biarkan justify-content: center; dari style dasar) */
+    position: relative; /* Diperlukan untuk memposisikan tombol */
+  }
+
+  .search-container {
+    /* (Biarkan margin: 0 auto; dari style dasar .header) */
+    /* Kita tidak perlu aturan khusus di sini karena .header sudah center */
+  }
+
+  .header-actions {
+    /* Pindahkan tombol aksi ke ujung kanan header */
+    position: absolute;
+    right: 0;
+    /* right: 24px; juga boleh jika container punya padding */
   }
 }
 
-/* Breakpoint 2: Tablet (Portrait) */
-@media (max-width: 900px) {
-  .main-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 600px) {
+  .container {
+    padding: 12px;
+    /* Sedikit kurangi padding di seluler */
   }
+
   .current-temp-container {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0;
   }
-  .temp-desc-wrapper {
-    align-items: center;
-  }
-  .description-of-weather {
-    align-self: center;
-  }
-  .location-and-date {
-    align-items: center;
-  }
-  .highlight-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .aq-components-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 
-/* Breakpoint 3: Mobile (≤600px) */
-@media (max-width: 600px) {
-  .container {
-    padding: 8px;
-  }
-  .header {
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .main-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .left-column,
-  .right-column {
-    gap: 12px;
-  }
-  .current-weather,
-  .highlights,
-  .forecast-card {
-    padding: 12px;
-    border-radius: 16px;
-  }
   .weather-icon {
-    width: 80px;
-    height: 80px;
+    width: 150px;
+    height: 150px;
+    margin: 0;
   }
-  .current-temp {
-    font-size: 36px;
-  }
-  .highlight-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .aq-components-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .hourly-forecast {
-    gap: 8px;
-    padding-bottom: 8px;
-  }
-  .day-item {
-    gap: 8px;
-    padding: 4px 0;
-  }
-  .location-button {
-    min-width: 100px;
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-  .current-desc {
-    font-size: 14px;
-    padding: 8px;
-    border-radius: 12px;
-  }
-  .highlight-value {
-    font-size: 18px;
-  }
-  .forecast-card h2,
-  .highlights h2,
-  .current-weather h2 {
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
-}
 
-/* Breakpoint 4: Very Small Devices (≤400px) */
-@media (max-width: 400px) {
-  .container {
-    padding: 4px;
-  }
-  .current-weather,
-  .highlights,
-  .forecast-card {
-    padding: 6px;
-    border-radius: 10px;
-  }
-  .weather-icon {
-    width: 50px;
-    height: 50px;
-  }
   .current-temp {
+    font-size: 60px;
+  }
+
+  .highlight-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .aq-components-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* --- GAYA BARU RESPONSIVE --- */
+
+  /* 1. Toggler Ikon (Search/Back) */
+  .mobile-search-toggle {
+    display: flex;
+    /* Tampilkan di seluler */
+    align-items: center;
+    order: 1;
+    /* Selalu di paling kiri */
+  }
+
+  .mobile-search-icon,
+  .mobile-back-icon {
     font-size: 24px;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 12px;
+    /* Area klik lebih besar */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  .location-button {
-    min-width: 80px;
-    padding: 4px 8px;
-    font-size: 10px;
+
+  .mobile-search-icon:hover,
+  .mobile-back-icon:hover {
+    background-color: var(--background);
   }
+
+  /* State Default: Tampilkan 'search', sembunyikan 'back' */
+  .header .mobile-search-icon {
+    display: flex;
+  }
+
+  .header .mobile-back-icon {
+    display: none;
+  }
+
+  /* State Aktif: Sembunyikan 'search', tampilkan 'back' */
+  .header.search-active .mobile-search-icon {
+    display: none;
+  }
+
+  .header.search-active .mobile-back-icon {
+    display: flex;
+  }
+
+
+  /* 2. Kontainer Search */
+  .search-container {
+    /* State Default: Sembunyikan */
+    display: none;
+  }
+
+  /* State Aktif: Tampilkan dan penuhi ruang */
+  .header.search-active .search-container {
+    display: block;
+    flex-grow: 1;
+    /* Ambil sisa ruang */
+    order: 2;
+    /* Posisi di tengah */
+    max-width: none;
+    /* Hapus batasan lebar desktop */
+  }
+
+  /* Sembunyikan ikon 'search' di DALAM input (versi desktop) */
+  .header.search-active .search-icon-left {
+    display: none;
+  }
+
+  /* Sesuaikan padding input saat ikon 'search' di dalam hilang */
+  .header.search-active .search-input {
+    padding-left: 20px;
+  }
+
+  /* 3. Tombol Aksi (Lokasi & Tema) */
+  .header-actions {
+    order: 3;
+    /* Selalu di paling kanan */
+  }
+
+  /* State Default: Tampilkan tombol */
+  .header .header-actions {
+    display: flex;
+  }
+
+  /* State Aktif: Sembunyikan tombol */
+  .header.search-active .header-actions {
+    display: none;
+  }
+  /* --- AKHIR GAYA BARU RESPONSIVE --- */
+
+}
+
+/* --- Akhir dari @media (max-width: 600px) --- */
+
+
+/* --- Definisi Warna AQI (Menggunakan Variabel) --- */
+.aq-value.aqi-baik {
+  background-color: var(--aqi-baik-bg, #d7f0d8);
+  color: var(--aqi-baik-text, #0b200c);
+}
+
+.aq-value.aqi-cukup {
+  background-color: var(--aqi-cukup-bg, #fff8c4);
+  color: var(--aqi-cukup-text, #262300);
+}
+
+.aq-value.aqi-sedang {
+  background-color: var(--aqi-sedang-bg, #ffe0c2);
+  color: var(--aqi-sedang-text, #2b1100);
+}
+
+.aq-value.aqi-buruk {
+  background-color: var(--aqi-buruk-bg, var(--error-container));
+  color: var(--aqi-buruk-text, var(--on-error-container));
+}
+
+.aq-value.aqi-sangat-buruk {
+  background-color: var(--aqi-sangat-buruk-bg, #f8d7ff);
+  color: var(--aqi-sangat-buruk-text, #2f003b);
+}
+
+.aq-value.aqi-unknown {
+  background-color: var(--aqi-unknown-bg, #e0e0e0);
+  color: var(--aqi-unknown-text, var(--on-surface));
+}
+
+/* --- Gaya Baru untuk Ramalan Angin Per Jam --- */
+.hourly-wind-forecast {
+  display: grid;
+  /* <-- UBAH ke grid */
+  grid-template-columns: repeat(8, 1fr);
+  /* <-- TAMBAHKAN: 8 kolom sama lebar */
+  gap: 10px;
+  /* <-- SESUAIKAN jarak antar kolom jika perlu (misal: 10px) */
+  margin-top: 16px;
+  padding-bottom: 8px;
+  /* Hapus overflow-x dan justify-content jika ada */
+}
+
+.wind-hour-item {
+  display: flex;
+  flex-direction: column;
+  /* <-- Layout vertikal */
+  align-items: center;
+  gap: 6px;
+  /* <-- Jarak vertikal antar elemen */
+  padding: 12px 6px;
+  border-radius: 12px;
+  background-color: var(--background);
+  text-align: center;
+  transition: background-color 0.3s ease;
+  justify-content: center;
+  /* Hapus height jika ada */
+}
+
+/* Hapus selector .wind-details */
+
+/* Teks Arah Mata Angin */
+.wind-direction-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  /* Hapus min-width dan text-align */
+}
+
+/* Ikon arah angin */
+.wind-direction-icon {
+  font-size: 18px;
+  /* Sesuaikan ukuran */
+  font-variation-settings: 'FILL' 1;
+  color: var(--primary);
+  transition: transform 0.3s ease, color 0.3s ease;
+  line-height: 1;
+  /* Bantu rapikan spasi vertikal */
+}
+
+/* Teks kecepatan angin */
+.wind-speed {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+/* --- Penyesuaian Judul --- */
+.aq-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.aq-title-wrapper h2 {
+  margin: 0;
+}
+
+.aq-summary {
+  justify-content: center;
+}
+
+/* --- Animasi Transisi Tema (View Transition) --- */
+
+/* Memberi nama pada transisi 'root'. 
+  Ini memberi tahu browser untuk menganimasi setiap perubahan pada <html>
+*/
+html::view-transition {
+  view-transition-name: root;
+}
+
+/* Definisi animasi. 
+  'circle-reveal-in' akan menggunakan variabel yang kita atur di React.
+*/
+@keyframes circle-reveal-in {
+  from {
+    /* Mulai dari lingkaran 0px di posisi klik mouse */
+    clip-path: circle(0px at var(--clip-x) var(--clip-y));
+  }
+
+  to {
+    /* Berakhir di lingkaran besar (radius) di posisi klik mouse */
+    clip-path: circle(var(--clip-r) at var(--clip-x) var(--clip-y));
+  }
+}
+
+/* Terapkan animasi ke 'snapshot' TEMA BARU.
+  '::view-transition-new(root)' adalah "foto" dari tampilan setelah tema diubah.
+*/
+::view-transition-new(root) {
+  /* Hapus animasi default (fade-in) */
+  animation: none;
+
+  /* Terapkan animasi baru kita */
+  animation-name: circle-reveal-in;
+  animation-duration: 0.5s;
+  /* Sesuaikan kecepatan di sini (misal: 0.5s) */
+  animation-timing-function: ease-in-out;
+}
+
+/* Kita tidak ingin tema LAMA memudar (fade-out).
+  '::view-transition-old(root)' adalah "foto" dari tampilan sebelum tema diubah.
+*/
+::view-transition-old(root) {
+  /* Hapus animasi default (fade-out) */
+  animation: none;
 }

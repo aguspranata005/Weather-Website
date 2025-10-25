@@ -20,7 +20,6 @@
   --md-sys-color-on-error: #ffffff;
   --md-sys-color-error-container: #ffdad6;
   --md-sys-color-on-error-container: #410002;
-  --md-sys-color-background: #fdfcff;
   --md-sys-color-on-background: #1a1c1e;
   --md-sys-color-surface: #fdfcff;
   --md-sys-color-on-surface: #1a1c1e;
@@ -37,7 +36,6 @@
 body {
   margin: 0;
   font-family: 'Outfit', sans-serif;
-  background-color: var(--md-sys-color-background);
   color: var(--md-sys-color-on-background);
 }
 

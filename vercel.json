@@ -22,7 +22,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/main.go"
+      "dest": "/api/index.go"
     },
     {
       "src": "/(.*)",

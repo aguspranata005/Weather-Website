@@ -1,27 +1,78 @@
 import { useState, useEffect, useCallback } from 'react';
-import './App.css';
+import './App.css'; // Baris ini menghubungkan file CSS
+import { useTheme } from './ThemeContext';
 
-// Menggunakan 'import type' untuk mengimpor tipe data saja.
-import type { CleanedCity, WeatherResponse, WeatherListItem } from './types';
+// --- Definisi Tipe ---
+interface CleanedCity {
+  lat: number;
+  lon: number;
+  displayName: string;
+}
 
-// --- Tipe Data Baru untuk Kualitas Udara ---
-export interface AirPollutionResponse {
+interface WeatherListItem {
+  dt: number;
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+  };
+  weather: {
+    description: string;
+    icon: string;
+  }[];
+  wind: {
+    speed: number;
+    deg: number;
+  };
+  pop: number;
+}
+
+interface WeatherResponse {
+  list: WeatherListItem[];
+  city: {
+    name: string;
+    country: string;
+    sunrise: number;
+    sunset: number;
+  };
+}
+
+interface AirPollutionResponse {
   list: {
     main: {
-      aqi: number; // Indeks Kualitas Udara (skala 1-5)
+      aqi: number;
     };
     components: {
-      co: number;   // Karbon monoksida (μg/m³)
-      no2: number;  // Nitrogen dioksida (μg/m³)
-      o3: number;   // Ozon (μg/m³)
-      so2: number;  // Sulfur dioksida (μg/m³)
+      co: number;
+      no2: number;
+      o3: number;
+      so2: number;
     };
   }[];
 }
 
 // --- Konfigurasi & Fungsi Helper ---
-const API_BASE_URL = '/api';
-const getWeatherIconUrl = (iconCode: string) => `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
+const API_BASE_URL = 'http://localhost:8080/api';
+const getWeatherIconUrl = (iconCode: string): string => {
+  const baseUrl = "https://www.amcharts.com/wp-content/themes/amcharts4/css/img/icons/weather/animated/";
+  let iconName: string;
+
+  switch (iconCode) {
+    case '01d': iconName = 'day.svg'; break;
+    case '01n': iconName = 'night.svg'; break;
+    case '02d': iconName = 'cloudy-day-1.svg'; break;
+    case '02n': iconName = 'cloudy-night-1.svg'; break;
+    case '03d': case '03n': iconName = 'cloudy.svg'; break;
+    case '04d': case '04n': iconName = 'cloudy.svg'; break;
+    case '09d': case '09n': iconName = 'rainy-1.svg'; break;
+    case '10d': case '10n': iconName = 'rainy-6.svg'; break;
+    case '11d': case '11n': iconName = 'thunder.svg'; break;
+    case '13d': case '13n': iconName = 'snowy-6.svg'; break;
+    case '50d': case '50n': iconName = 'fog.svg'; break;
+    default: iconName = 'weather.svg'; break;
+  }
+  return `${baseUrl}${iconName}`;
+};
 
 const getAqiDescription = (aqi: number): string => {
   switch (aqi) {
@@ -34,22 +85,27 @@ const getAqiDescription = (aqi: number): string => {
   }
 };
 
-const degreesToCardinal = (deg: number): string => {
-  // Standar 16 arah mata angin internasional
-  const directions = [
-    'N', 'NNE', 'NE', 'ENE',
-    'E', 'ESE', 'SE', 'SSE',
-    'S', 'SSW', 'SW', 'WSW',
-    'W', 'WNW', 'NW', 'NNW'
-  ];
-  const index = Math.floor((deg + 11.25) / 22.5) % 16;
-  return directions[index];
+const getAqiClassName = (aqi: number): string => {
+  switch (aqi) {
+    case 1: return 'aqi-baik';
+    case 2: return 'aqi-cukup';
+    case 3: return 'aqi-sedang';
+    case 4: return 'aqi-buruk';
+    case 5: return 'aqi-sangat-buruk';
+    default: return 'aqi-unknown';
+  }
+};
+
+const getWindDirectionText = (deg: number): string => {
+  const directions = ['Utara', 'Utara Timur Laut', 'Timur Laut', 'Timur Timur Laut', 'Timur', 'Timur Tenggara', 'Selatan Tenggara', 'Selatan', 'Selatan Barat', 'Barat Daya', 'Barat Barat Daya', 'Barat', 'Utara Barat Laut', 'Barat Laut', 'Utara Barat Laut'];
+  const index = Math.round(((deg % 360) / 360) * 16) % 16;
+  return directions[index] || 'U', 'UTL', 'TL', 'TTL', 'T', 'TG', 'STG', 'S', 'SBD', 'BD', 'BBD', 'B', 'UBL', 'BL', 'UBL';
 };
 
 
-// --- Komponen Utama Aplikasi ---
+// --- Komponen Utama ---
 function App() {
-  // --- State Management ---
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CleanedCity[]>([]);
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
@@ -57,8 +113,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
+  
+  // 1. STATE BARU UNTUK MODE PENCARIAN SELULER
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
-  // --- Fungsi untuk Mengambil Data ---
   const fetchAllData = useCallback(async (lat: number, lon: number) => {
     setLoading(true);
     setError(null);
@@ -66,21 +124,24 @@ function App() {
     setAirQualityData(null);
     setSearchResults([]);
 
+    const safeJsonParse = async (response: Response) => {
+      const contentType = response.headers.get("content-type");
+      if (response.ok && contentType && contentType.includes("application/json")) {
+        return response.json();
+      }
+      const errorText = await response.text();
+      throw new Error(`Respons server tidak valid. Status: ${response.status}. Pesan: ${errorText.substring(0, 200)}...`);
+    };
+
     try {
       const [weatherResponse, airPollutionResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/weather?lat=${lat}&lon=${lon}`),
         fetch(`${API_BASE_URL}/air-pollution?lat=${lat}&lon=${lon}`)
       ]);
-
-      if (!weatherResponse.ok) throw new Error((await weatherResponse.json()).details || 'Gagal mengambil data cuaca.');
-      if (!airPollutionResponse.ok) throw new Error((await airPollutionResponse.json()).details || 'Gagal mengambil data kualitas udara.');
-
-      const weatherDataResult: WeatherResponse = await weatherResponse.json();
-      const airDataResult: AirPollutionResponse = await airPollutionResponse.json();
-
+      const weatherDataResult = await safeJsonParse(weatherResponse);
+      const airDataResult = await safeJsonParse(airPollutionResponse);
       setWeatherData(weatherDataResult);
       setAirQualityData(airDataResult);
-
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -89,7 +150,6 @@ function App() {
     }
   }, []);
 
-  // --- Fungsi untuk Mencari Kota ---
   const fetchCities = async (query: string) => {
     if (query.length < 3) {
       setSearchResults([]);
@@ -107,17 +167,19 @@ function App() {
 
   const handleCitySelect = (city: CleanedCity) => {
     setSearchQuery(city.displayName);
+    setSearchResults([]);
     fetchAllData(city.lat, city.lon);
+    setIsSearchActive(false); // <-- Tutup pencarian setelah memilih
   };
 
   const handleUseMyLocation = useCallback(() => {
     if (navigator.geolocation) {
       setLocationLoading(true);
       setError(null);
+      setSearchQuery('');
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setSearchQuery("Lokasi Saat Ini");
           fetchAllData(latitude, longitude);
         },
         (err) => {
@@ -147,6 +209,17 @@ function App() {
     }
   }, [fetchAllData]);
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+  
+  // 2. HANDLER UNTUK TOMBOL "BACK" SELULER
+  const handleCloseMobileSearch = () => {
+    setIsSearchActive(false);
+    handleClearSearch(); // Sekalian bersihkan pencarian saat ditutup
+  };
+
   useEffect(() => {
     handleUseMyLocation();
   }, [handleUseMyLocation]);
@@ -161,73 +234,122 @@ function App() {
   });
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="search-container">
-          <md-outlined-text-field
-            label="Cari Kota..."
-            value={searchQuery}
-            onInput={(e: any) => {
-              setSearchQuery(e.target.value);
-              fetchCities(e.target.value);
-            }}
-          />
-          {searchResults.length > 0 && (
-            <md-list className="search-results">
-              {searchResults.map((city) => (
-                <md-list-item
-                  key={`${city.lat}-${city.lon}`}
-                  headline={city.displayName}
-                  onClick={() => handleCitySelect(city)}
-                />
-              ))}
-            </md-list>
-          )}
-        </div>
-        <button
-          className="location-button"
-          onClick={handleUseMyLocation}
-          disabled={locationLoading || loading}
-        >
-          {locationLoading ? (
-            <>
-              <div className="loading-spinner"></div>
-              <span>Mencari...</span>
-            </>
-          ) : (
-            <>
-              <span className="material-symbols-outlined">my_location</span>
-              <span>Lokasi Saya</span>
-            </>
-          )}
-        </button>
-      </header>
+    <>
+      <div className="container">
+        {/* 3. CLASS DINAMIS PADA HEADER */}
+        <header className={`header ${isSearchActive ? 'search-active' : ''}`}>
 
-      <main className="dashboard">
-        {loading && (
-          <div className="loading-container">
-            <div className="loading-spinner large"></div>
-            <p>Mengambil data terbaru...</p>
+          {/* 4. TOGGLER IKON SEARCH/BACK KHUSUS SELULER */}
+          <div className="mobile-search-toggle">
+            <span
+              className="material-symbols-rounded mobile-search-icon"
+              onClick={() => setIsSearchActive(true)} // <-- Buka pencarian
+            >
+              search
+            </span>
+            <span
+              className="material-symbols-rounded mobile-back-icon"
+              onClick={handleCloseMobileSearch} // <-- Tutup pencarian
+            >
+              arrow_back
+            </span>
           </div>
-        )}
-        {error && (
-          <div className="error-message">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="material-symbols-outlined">error</span>
-              <strong>Terjadi Kesalahan</strong>
-            </div>
-            <p>{error}</p>
-            <button className="retry-button" onClick={handleUseMyLocation}>
-              Coba Lagi
+
+          {/* 5. KONTAINER PENCARIAN */}
+          <div className="search-container">
+            <span className="material-symbols-rounded search-icon-left">
+              search
+            </span>
+
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Cari Tempat, Kota, atau Negara"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                fetchCities(e.target.value);
+              }}
+              onFocus={() => {
+                if (window.innerWidth <= 600) setIsSearchActive(true);
+              }}
+            />
+
+            {searchQuery.length > 0 && (
+              <span
+                className="material-symbols-rounded search-icon-right"
+                onClick={handleClearSearch}
+              >
+                close
+              </span>
+            )}
+
+            {searchResults.length > 0 && (
+              <ul className="search-results">
+                {searchResults.map((city) => (
+                  <li
+                    key={`${city.lat}-${city.lon}`}
+                    onClick={() => handleCitySelect(city)}
+                  >
+                    {city.displayName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* 6. BUNGKUS TOMBOL AKSI DALAM DIV BARU */}
+          <div className="header-actions">
+            <button
+              className="location-button"
+              onClick={handleUseMyLocation}
+              disabled={locationLoading || loading}
+              aria-label="Gunakan Lokasi Saya"
+            >
+              {locationLoading ? (
+                <div className="loading-spinner"></div>
+              ) : (
+                <span className="material-symbols-rounded">my_location</span>
+              )}
+            </button>
+
+            <button
+              className="location-button theme-toggle-button"
+              onClick={(e) => toggleTheme(e)}
+              aria-label="Ganti tema"
+            >
+              <span className="material-symbols-rounded">
+                {theme === 'light' ? 'dark_mode' : 'light_mode'}
+              </span>
             </button>
           </div>
-        )}
-        {weatherData && todayWeather && todayAirQuality && !error && (
-          <>
-            {/* Layout Grid: Kiri dan Kanan */}
-            <div className="main-grid">
-              <div className="left-column">
-                {/* Kartu Cuaca Saat Ini */}
+          
+        </header>
+
+        <main className="dashboard">
+          {loading && (
+            <div className="loading-container">
+              <div className="loading-spinner large"></div>
+              <p>Mengambil data terbaru...</p>
+            </div>
+          )}
+          {error && (
+            <div className="error-message">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span className="material-symbols-rounded">error</span>
+                <strong>Terjadi Kesalahan</strong>
+              </div>
+              <p>{error}</p>
+              <button className="retry-button" onClick={handleUseMyLocation}>
+                Coba Lagi
+              </button>
+            </div>
+          )}
+          {weatherData && todayWeather && todayAirQuality && !error && (
+            <>
+              {/* === KOLOM KIRI === */}
+              <section className="main-content">
+                {/* 1. KARTU CUACA SAAT INI */}
                 <div className="current-weather">
                   <h2>Cuaca Saat Ini</h2>
                   <div className="current-temp-container">
@@ -245,70 +367,85 @@ function App() {
                   </div>
                   <div className="location-and-date">
                     <div className="info-item">
-                      <span className="material-symbols-outlined">location_on</span>
+                      <span className="material-symbols-rounded">location_on</span>
                       <span>{weatherData.city.name}, {weatherData.city.country}</span>
                     </div>
                     <div className="info-item">
-                      <span className="material-symbols-outlined">calendar_today</span>
+                      <span className="material-symbols-rounded">calendar_today</span>
                       <span>{todayDate}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Kartu Ramalan 5 Hari */}
+                {/* 2. KARTU RAMALAN 24 JAM */}
                 <div className="forecast-card">
-                  <h2>Ramalan 5 Hari</h2>
-                  <md-list>
-                    {process5DayForecast(weatherData.list).map(day => (
-                      <DayForecastItem key={day.date} day={day} />
+                  <h2>Ramalan 24 Jam</h2>
+                  {/* Baris Suhu & Ikon Cuaca */}
+                  <div className="hourly-forecast">
+                    {weatherData.list.slice(0, 8).map(item => (
+                      <HourCard key={item.dt} item={item} />
                     ))}
-                  </md-list>
-                </div>
-              </div>
+                  </div>
 
-              <div className="right-column">
-                {/* Kartu Sorotan Hari Ini */}
+                  {/* Baris Angin */}
+                  <div className="hourly-wind-forecast">
+                    {weatherData.list.slice(0, 8).map(item => (
+                      <WindHourCard key={`wind-${item.dt}`} item={item} />
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* === KOLOM KANAN === */}
+              <aside className="sidebar">
+                {/* 1. KARTU SOROTAN */}
                 <div className="highlights">
-                  <h2>Sorotan Hari Ini</h2>
+                  <div className="aq-title-wrapper">
+                    <span className="material-symbols-rounded highlight-title-icon">
+                      trending_up
+                    </span>
+                    <h2>Sorotan Hari Ini</h2>
+                  </div>
                   <div className="highlight-grid">
-                    <HighlightCard icon="air" title="Kecepatan Angin" value={`${todayWeather.wind.speed.toFixed(1)} m/s`} />
                     <HighlightCard icon="humidity_percentage" title="Kelembapan" value={`${todayWeather.main.humidity}%`} />
                     <HighlightCard icon="thermostat" title="Terasa Seperti" value={`${Math.round(todayWeather.main.feels_like)}°C`} />
                     <HighlightCard icon="umbrella" title="Peluang Hujan" value={`${Math.round(todayWeather.pop * 100)}%`} />
                     <HighlightCard icon="sunny" title="Matahari Terbit" value={new Date(weatherData.city.sunrise * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} />
                     <HighlightCard icon="wb_twilight" title="Matahari Terbenam" value={new Date(weatherData.city.sunset * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} />
                   </div>
-                  <hr className="divider" />
+                </div>
+
+                {/* 2. KARTU KUALITAS UDARA */}
+                <div className="forecast-card">
+                  <div className="aq-title-wrapper">
+                    <span className="material-symbols-rounded aq-icon">airwave</span>
+                    <h2>Indeks Kualitas Udara</h2>
+                  </div>
                   <AirQualityCard aqi={todayAirQuality.main.aqi} components={todayAirQuality.components} />
                 </div>
 
-                {/* Kartu Ramalan 24 Jam */}
+                {/* 3. KARTU RAMALAN 5 HARI */}
                 <div className="forecast-card">
-                  <h2>Ramalan 24 Jam</h2>
-                  <div className="hourly-forecast">
-                    {weatherData.list.slice(0, 8).map(item => (
-                      <HourCard key={item.dt} item={item} />
-                    ))}
-                  </div>
-                  <div className="hourly-forecast">
-                    {weatherData.list.slice(0, 8).map(item => (
-                      <HourWindCard key={item.dt} item={item} />
+                  <h2>Ramalan 5 Hari</h2>
+                  <div className="daily-forecast">
+                    {process5DayForecast(weatherData.list).map(day => (
+                      <DayForecastItem key={day.date} day={day} />
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+              </aside>
+            </>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 
 // --- Sub-Komponen ---
 const HighlightCard = ({ icon, title, value }: { icon: string; title: string; value: string }) => (
   <div className="highlight-item">
-    <span className="material-symbols-outlined">{icon}</span>
+    <span className="material-symbols-rounded">{icon}</span>
     <div>
       <p className="highlight-title">{title}</p>
       <p className="highlight-value">{value}</p>
@@ -318,10 +455,10 @@ const HighlightCard = ({ icon, title, value }: { icon: string; title: string; va
 
 const AirQualityCard = ({ aqi, components }: { aqi: number, components: AirPollutionResponse['list'][0]['components'] }) => (
   <div className="air-quality-card">
-    <h3 className="aq-title">Indeks Kualitas Udara</h3>
     <div className="aq-summary">
-      <span className="material-symbols-outlined aq-icon">airwave</span>
-      <p className="aq-value">{getAqiDescription(aqi)}</p>
+        <p className={`aq-value ${getAqiClassName(aqi)}`}>
+            {getAqiDescription(aqi)}
+        </p>
     </div>
     <div className="aq-components-grid">
       <div className="aq-component">
@@ -344,28 +481,33 @@ const AirQualityCard = ({ aqi, components }: { aqi: number, components: AirPollu
   </div>
 );
 
+// --- HourCard (Tanpa Angin) ---
 const HourCard = ({ item }: { item: WeatherListItem }) => (
   <div className="hour-item">
-    <p>{new Date(item.dt * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+    <p className="hour-time">
+      {new Date(item.dt * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+    </p>
     <img src={getWeatherIconUrl(item.weather[0].icon)} alt={item.weather[0].description} width="50" />
     <p className="hour-temp">{Math.round(item.main.temp)}°C</p>
   </div>
 );
 
-const HourWindCard = ({ item }: { item: WeatherListItem }) => (
-  <div className="hour-wind-item">
-    <p className="hour-time">{new Date(item.dt * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
-     <div className="wind-direction-icon-wrapper">
-      {/* IKON PANAH YANG BERPUTAR */}
-      <span
-        className="material-symbols-outlined wind-direction-icon"
-        style={{ transform: `rotate(${item.wind.deg}deg)` }}
-      >
-        navigation
-      </span>
-    </div>
-    <p className="hour-wind-speed">{item.wind.speed.toFixed(1)} m/s</p>
-    <p className="hour-wind-direction">{degreesToCardinal(item.wind.deg)}</p>
+// --- WindHourCard (Susunan Vertikal Baru) ---
+const WindHourCard = ({ item }: { item: WeatherListItem }) => (
+  <div className="wind-hour-item">
+    {/* Atas: Teks Arah Mata Angin */}
+    <span className="wind-direction-text">{getWindDirectionText(item.wind.deg)}</span>
+
+    {/* Tengah: Ikon Arah Angin */}
+    <span
+      className="material-symbols-rounded wind-direction-icon"
+      style={{ transform: `rotate(${item.wind.deg || 0}deg)` }}
+    >
+      navigation
+    </span>
+
+    {/* Bawah: Kecepatan Angin */}
+    <span className="wind-speed">{item.wind.speed.toFixed(1)} m/s</span>
   </div>
 );
 
@@ -393,7 +535,6 @@ const process5DayForecast = (list: WeatherListItem[]): ProcessedDay[] => {
     const dayIcons = dailyData[date].icons;
     const iconFrequency = dayIcons.reduce((acc, icon) => ({ ...acc, [icon]: (acc[icon] || 0) + 1 }), {} as { [key: string]: number });
     const representativeIcon = Object.keys(iconFrequency).reduce((a, b) => iconFrequency[a] > iconFrequency[b] ? a : b);
-
     return {
       date: date,
       dayName: new Date(date).toLocaleDateString('id-ID', { weekday: 'long' }),
@@ -405,14 +546,11 @@ const process5DayForecast = (list: WeatherListItem[]): ProcessedDay[] => {
 }
 
 const DayForecastItem = ({ day }: { day: ProcessedDay }) => (
-  <>
-    <div className="day-item">
-      <img src={getWeatherIconUrl(day.icon)} alt="" width="50" />
-      <span className="day-name">{day.dayName}</span>
-      <span className="day-temp">{day.temp_max}° / {day.temp_min}°</span>
-    </div>
-    <md-divider />
-  </>
+  <div className="day-item">
+    <img src={getWeatherIconUrl(day.icon)} alt="" width="50" />
+    <span className="day-name">{day.dayName}</span>
+    <span className="day-temp">{day.temp_max}° / {day.temp_min}°</span>
+  </div>
 );
 
 export default App;

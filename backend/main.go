@@ -1,4 +1,4 @@
-package handler
+package main
 
 import (
 	"encoding/json"
@@ -17,7 +17,6 @@ import (
 // --- KONFIGURASI & VARIABEL GLOBAL ---
 
 var openWeatherAPIKey string
-var router *gin.Engine
 
 // Konstanta untuk URL API OpenWeatherMap agar mudah dikelola.
 const (
@@ -28,6 +27,7 @@ const (
 
 // --- STRUKTUR DATA (STRUCTS) ---
 
+// CleanedCity adalah struct untuk data kota yang sudah bersih dan siap dikirim ke frontend.
 type CleanedCity struct {
 	Name        string  `json:"name"`
 	DisplayName string  `json:"displayName"`
@@ -36,6 +36,7 @@ type CleanedCity struct {
 	Country     string  `json:"country"`
 }
 
+// geoResult adalah struct untuk menampung response mentah dari Geo API OpenWeatherMap.
 type geoResult struct {
 	Name    string  `json:"name"`
 	Lat     float64 `json:"lat"`
@@ -44,6 +45,8 @@ type geoResult struct {
 	State   string  `json:"state,omitempty"`
 }
 
+// WeatherResponse adalah struct lengkap untuk menampung response dari Forecast API.
+// Tidak ada perubahan di sini.
 type WeatherResponse struct {
 	List []struct {
 		Dt   int64 `json:"dt"`
@@ -59,9 +62,8 @@ type WeatherResponse struct {
 		} `json:"weather"`
 		Wind struct {
 			Speed float64 `json:"speed"`
-			Deg   float64 `json:"deg"`
 		} `json:"wind"`
-		Pop float64 `json:"pop"`
+		Pop float64 `json:"pop"` // Probability of precipitation
 	} `json:"list"`
 	City struct {
 		Name    string `json:"name"`
@@ -71,6 +73,8 @@ type WeatherResponse struct {
 	} `json:"city"`
 }
 
+// AirPollutionResponse adalah struct untuk menampung response dari Air Pollution API.
+// Struct ini dibuat agar cocok dengan apa yang diharapkan oleh frontend.
 type AirPollutionResponse struct {
 	List []struct {
 		Main struct {
@@ -86,67 +90,43 @@ type AirPollutionResponse struct {
 }
 
 
-// --- FUNGSI INIT & HANDLER UNTUK VERCEL ---
+// --- FUNGSI UTAMA (MAIN) ---
 
-// setupRouter menginisialisasi Gin router
-func setupRouter() *gin.Engine {
-	// Memuat environment variable (untuk pengembangan lokal)
+func main() {
+	// Memuat environment variable dari file .env.
 	if err := godotenv.Load(); err != nil {
-		log.Println("Peringatan: file .env tidak ditemukan. Mengandalkan Environment Variables Vercel.")
+		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
-	
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
-    r.Use(gin.Logger(), gin.Recovery())
+	if openWeatherAPIKey == "" {
+		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
+	}
 
+	// Inisialisasi Gin Router.
+	router := gin.Default()
+
+	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true 
-	r.Use(cors.New(config))
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
+	router.Use(cors.New(config))
 
-	api := r.Group("/api")
+	// Grup routing untuk semua endpoint API di bawah prefix /api.
+	api := router.Group("/api")
 	{
 		api.GET("/search", searchCitiesHandler)
 		api.GET("/weather", getWeatherHandler)
+		// [DIPERBAIKI] Mengubah endpoint agar cocok dengan panggilan dari frontend.
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
-	
-	r.GET("/", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"message": "Go API (handler package) is running on Vercel"})
-    })
-    
-    return r
+
+	// Menjalankan server
+	log.Println("Server backend berjalan di http://localhost:8080")
+	router.Run(":8080")
 }
 
-// init() menjalankan setupRouter HANYA SEKALI saat fungsi dimuat (cold start).
-func init() {
-    router = setupRouter()
-}
+// --- HANDLER & FUNGSI BANTUAN ---
 
-// MainHandler adalah fungsi yang diekspor Vercel untuk menjalankan Serverless Function.
-// Nama ini dipilih karena "Handler" mungkin berbenturan dengan variabel Gin sebelumnya.
-func MainHandler(w http.ResponseWriter, r *http.Request) {
-    // Arahkan request ke instance Gin router
-    router.ServeHTTP(w, r)
-}
-
-
-// --- FUNGSI UTAMA LOKAL (UNTUK TESTING LOKAL) ---
-
-// Fungsi main() harus tetap dipertahankan dengan package main untuk kompilasi lokal.
-// Namun, karena kita mengubah package ke 'handler', kita harus membuat file terpisah
-// jika ingin menjalankan secara lokal dengan 'go run main.go'.
-// Jika Anda hanya menggunakan Vercel CLI (vercel dev), Vercel akan menangani ini.
-
-/*
-// JANGAN sertakan fungsi main() di sini, karena ini adalah package 'handler'.
-// Jika Anda ingin menjalankan lokal, buat file baru: backend/local/main.go
-// dengan package main dan panggil handler.MainHandler
-*/
-
-
-// --- HANDLER FUNCTIONS ---
-
+// searchCitiesHandler menangani permintaan pencarian kota.
 func searchCitiesHandler(c *gin.Context) {
 	query := c.Query("q")
 	if query == "" {
@@ -194,6 +174,7 @@ func searchCitiesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, cleanedCities)
 }
 
+// getWeatherHandler menangani permintaan data cuaca lengkap.
 func getWeatherHandler(c *gin.Context) {
 	lat := c.Query("lat")
 	lon := c.Query("lon")
@@ -225,6 +206,7 @@ func getWeatherHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, weatherData)
 }
 
+// [DIPERBAIKI] getAirPollutionHandler sekarang mengirimkan respons yang sesuai dengan harapan frontend.
 func getAirPollutionHandler(c *gin.Context) {
 	lat := c.Query("lat")
 	lon := c.Query("lon")
@@ -247,11 +229,14 @@ func getAirPollutionHandler(c *gin.Context) {
 		return
 	}
 
+	// Membaca body respons untuk diteruskan langsung
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca respons dari layanan kualitas udara"})
 		return
 	}
 	
+	// Mengirimkan kembali body JSON mentah dari OpenWeatherMap
+	// Ini memastikan struktur data (termasuk 'list') tetap sama
 	c.Data(http.StatusOK, "application/json", body)
 }
