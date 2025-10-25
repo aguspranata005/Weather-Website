@@ -624,11 +624,6 @@ body {
     justify-content: center; /* Diperlukan untuk memposisikan tombol */
   }
 
-  .search-container {
-    /* (Biarkan margin: 0 auto; dari style dasar .header) */
-    /* Kita tidak perlu aturan khusus di sini karena .header sudah center */
-  }
-
   .header-actions {
     /* Pindahkan tombol aksi ke ujung kanan header */
     position: absolute;

@@ -92,6 +92,10 @@ type AirPollutionResponse struct {
 
 // --- FUNGSI UTAMA (MAIN) ---
 
+func Handler(w http.ResponseWriter, r *http.Request) {
+	mux.ServeHTTP(w, r)
+}
+
 func main() {
 	// Memuat environment variable dari file .env.
 	if err := godotenv.Load(); err != nil {
