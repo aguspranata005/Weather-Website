@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -130,7 +130,7 @@ func setupRouter() (*gin.Engine, error) {
 	// 	api.GET("/weather", getWeatherHandler)
 	// 	api.GET("/air-pollution", getAirPollutionHandler)
 	// }
-	
+
 	router.GET("/search", searchCitiesHandler)
 	router.GET("/weather", getWeatherHandler)
 	router.GET("/air-pollution", getAirPollutionHandler)
