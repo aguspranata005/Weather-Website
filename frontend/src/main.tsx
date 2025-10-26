@@ -1,0 +1,16 @@
+// File: main.tsx
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import { ThemeProvider } from './ThemeContext.tsx' // <-- 1. IMPORT
+import './index.css' // (Jika ada)
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    {/* 2. PASTIKAN <App /> ADA DI DALAM SINI */}
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </React.StrictMode>,
+)
