@@ -89,54 +89,38 @@ type AirPollutionResponse struct {
 	} `json:"list"`
 }
 
-// --- HANDLER UTAMA UNTUK VERCEL ---
-// Handler adalah fungsi utama yang akan dieksekusi oleh Vercel
-func Handler(w http.ResponseWriter, r *http.Request) {
-	// Setup router setiap kali ada request
-	router, err := setupRouter()
-	if err != nil {
-		log.Printf("Error initializing router: %v", err)
-		http.Error(w, "Gagal inisialisasi server", http.StatusInternalServerError)
-		return
-	}
-	// Serahkan request ke Gin
-	router.ServeHTTP(w, r)
-}
+// --- FUNGSI UTAMA (MAIN) ---
 
-// setupRouter berisi semua kode yang sebelumnya ada di func main()
-func setupRouter() (*gin.Engine, error) {
-	// Memuat .env. Ini hanya untuk lokal. Di Vercel, kita pakai Environment Variables.
+func main() {
+	// Memuat environment variable dari file .env.
 	if err := godotenv.Load(); err != nil {
-		log.Println("Peringatan: file .env tidak ditemukan.")
+		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
-		// Jangan pakai log.Fatal, kembalikan error
-		return nil, fmt.Errorf("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur")
+		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
 	}
 
+	// Inisialisasi Gin Router.
 	router := gin.Default()
 
-	// Konfigurasi CORS
-	config := cors.DefaultConfig()	
-	config.AllowOrigins = []string{"*"} // Izinkan semua origin, Vercel akan menanganinya
+	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
 	router.Use(cors.New(config))
 
-	// BIARKAN GRUP /api INI SEPERTI ASLINYA
-	// Vercel akan meneruskan path /api/... ke fungsi ini
-	// api := router.Group("/api")
-	// {
-	// 	api.GET("/search", searchCitiesHandler)
-	// 	api.GET("/weather", getWeatherHandler)
-	// 	api.GET("/air-pollution", getAirPollutionHandler)
-	// }
+	// Grup routing untuk semua endpoint API di bawah prefix /api.
+	api := router.Group("/api")
+	{
+		api.GET("/search", searchCitiesHandler)
+		api.GET("/weather", getWeatherHandler)
+		// [DIPERBAIKI] Mengubah endpoint agar cocok dengan panggilan dari frontend.
+		api.GET("/air-pollution", getAirPollutionHandler)
+	}
 
-	router.GET("/search", searchCitiesHandler)
-	router.GET("/weather", getWeatherHandler)
-	router.GET("/air-pollution", getAirPollutionHandler)
-
-	// Hapus router.Run(), cukup kembalikan router-nya
-	return router, nil
+	// Menjalankan server
+	log.Println("Server backend berjalan di http://localhost:8080")
+	router.Run(":8080")
 }
 
 // --- HANDLER & FUNGSI BANTUAN ---
