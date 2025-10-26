@@ -124,12 +124,15 @@ func setupRouter() (*gin.Engine, error) {
 
 	// BIARKAN GRUP /api INI SEPERTI ASLINYA
 	// Vercel akan meneruskan path /api/... ke fungsi ini
-	api := router.Group("/api")
-	{
-		api.GET("/search", searchCitiesHandler)
-		api.GET("/weather", getWeatherHandler)
-		api.GET("/air-pollution", getAirPollutionHandler)
-	}
+	// api := router.Group("/api")
+	// {
+	// 	api.GET("/search", searchCitiesHandler)
+	// 	api.GET("/weather", getWeatherHandler)
+	// 	api.GET("/air-pollution", getAirPollutionHandler)
+	// }
+	router.GET("/search", searchCitiesHandler)
+	router.GET("/weather", getWeatherHandler)
+	router.GET("/air-pollution", getAirPollutionHandler)
 
 	// Hapus router.Run(), cukup kembalikan router-nya
 	return router, nil
