@@ -1,5 +1,15 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/vite"
+    },
+    {
+      "src": "backend/main.go",
+      "use": "vercel-go"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",

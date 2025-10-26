@@ -118,7 +118,7 @@ func setupRouter() (*gin.Engine, error) {
 	router := gin.Default()
 
 	// Konfigurasi CORS
-	config := cors.DefaultConfig()
+	config := cors.DefaultConfig()	
 	config.AllowOrigins = []string{"*"} // Izinkan semua origin, Vercel akan menanganinya
 	router.Use(cors.New(config))
 
@@ -130,6 +130,7 @@ func setupRouter() (*gin.Engine, error) {
 	// 	api.GET("/weather", getWeatherHandler)
 	// 	api.GET("/air-pollution", getAirPollutionHandler)
 	// }
+	
 	router.GET("/search", searchCitiesHandler)
 	router.GET("/weather", getWeatherHandler)
 	router.GET("/air-pollution", getAirPollutionHandler)
