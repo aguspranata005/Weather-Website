@@ -1,4 +1,4 @@
-package handler
+package main
 
 import (
 	"encoding/json"
@@ -26,7 +26,8 @@ const (
 )
 
 // --- STRUKTUR DATA (STRUCTS) ---
-// (Struktur data Anda dari file asli tidak berubah)
+
+// CleanedCity adalah struct untuk data kota yang sudah bersih dan siap dikirim ke frontend.
 type CleanedCity struct {
 	Name        string  `json:"name"`
 	DisplayName string  `json:"displayName"`
@@ -35,6 +36,7 @@ type CleanedCity struct {
 	Country     string  `json:"country"`
 }
 
+// geoResult adalah struct untuk menampung response mentah dari Geo API OpenWeatherMap.
 type geoResult struct {
 	Name    string  `json:"name"`
 	Lat     float64 `json:"lat"`
@@ -43,6 +45,7 @@ type geoResult struct {
 	State   string  `json:"state,omitempty"`
 }
 
+// WeatherResponse adalah struct lengkap untuk menampung response dari Forecast API.
 type WeatherResponse struct {
 	List []struct {
 		Dt   int64 `json:"dt"`
@@ -58,9 +61,9 @@ type WeatherResponse struct {
 		} `json:"weather"`
 		Wind struct {
 			Speed float64 `json:"speed"`
-			Deg   float64 `json:"deg"`
+			Deg   float64 `json:"deg"` // <-- [PERBAIKAN] BARIS INI DITAMBAHKAN
 		} `json:"wind"`
-		Pop float64 `json:"pop"`
+		Pop float64 `json:"pop"` // Probability of precipitation
 	} `json:"list"`
 	City struct {
 		Name    string `json:"name"`
@@ -70,6 +73,8 @@ type WeatherResponse struct {
 	} `json:"city"`
 }
 
+// AirPollutionResponse adalah struct untuk menampung response dari Air Pollution API.
+// Struct ini dibuat agar cocok dengan apa yang diharapkan oleh frontend.
 type AirPollutionResponse struct {
 	List []struct {
 		Main struct {
@@ -84,59 +89,44 @@ type AirPollutionResponse struct {
 	} `json:"list"`
 }
 
-// --- ENTRY POINT UNTUK VERCELL ---
-// func main() diganti menjadi func Handler()
-func Handler(w http.ResponseWriter, r *http.Request) {
-	// Memuat environment variable dari file .env (hanya untuk lokal)
-	// Di Vercel, variabel akan dimuat secara otomatis.
+// --- FUNGSI UTAMA (MAIN) ---
+
+func main() {
+	// Memuat environment variable dari file .env.
 	if err := godotenv.Load(); err != nil {
 		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
-		// Gunakan log.Println, JANGAN log.Fatal agar serverless tidak crash
-		log.Println("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur.")
+		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
 	}
 
 	// Inisialisasi Gin Router.
 	router := gin.Default()
 
-	// Konfigurasi CORS (Cross-Origin Resource Sharing)
+	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
 	config := cors.DefaultConfig()
-	// *** PERUBAHAN PENTING: Izinkan semua origin untuk Vercel ***
-	config.AllowOrigins = []string{"*"}
-	config.AllowMethods = []string{"GET", "OPTIONS"} // Izinkan metode yang diperlukan
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
 	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
-	// Ini cocok dengan rewrite Vercel: /api/...
 	api := router.Group("/api")
 	{
 		api.GET("/search", searchCitiesHandler)
 		api.GET("/weather", getWeatherHandler)
+		// [DIPERBAIKI] Mengubah endpoint agar cocok dengan panggilan dari frontend.
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
 
 	// Menjalankan server
-	// log.Println("Server backend berjalan di http://localhost:8080") // Tidak perlu di Vercel
-	// router.Run(":8080") // HAPUS baris ini
-	
-	// *** TAMBAHKAN baris ini untuk Vercel ***
-	// Menggunakan router Gin untuk melayani permintaan serverless
-	router.ServeHTTP(w, r)
+	log.Println("Server backend berjalan di http://localhost:8080")
+	router.Run(":8080")
 }
 
 // --- HANDLER & FUNGSI BANTUAN ---
 
 // searchCitiesHandler menangani permintaan pencarian kota.
 func searchCitiesHandler(c *gin.Context) {
-	// Tambahkan pengecekan API Key di dalam handler
-	if openWeatherAPIKey == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "API Key server tidak dikonfigurasi."})
-		return
-	}
-	
 	query := c.Query("q")
 	if query == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Query pencarian 'q' tidak boleh kosong"})
@@ -185,11 +175,6 @@ func searchCitiesHandler(c *gin.Context) {
 
 // getWeatherHandler menangani permintaan data cuaca lengkap.
 func getWeatherHandler(c *gin.Context) {
-	if openWeatherAPIKey == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "API Key server tidak dikonfigurasi."})
-		return
-	}
-
 	lat := c.Query("lat")
 	lon := c.Query("lon")
 	if lat == "" || lon == "" {
@@ -213,20 +198,15 @@ func getWeatherHandler(c *gin.Context) {
 
 	var weatherData WeatherResponse
 	if err := json.NewDecoder(resp.Body).Decode(&weatherData); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mem-parsing data cuaca"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "GGagal mem-parsing data cuaca"})
 		return
 	}
 
 	c.JSON(http.StatusOK, weatherData)
 }
 
-// getAirPollutionHandler
+// [DIPERBAIKI] getAirPollutionHandler sekarang mengirimkan respons yang sesuai dengan harapan frontend.
 func getAirPollutionHandler(c *gin.Context) {
-	if openWeatherAPIKey == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "API Key server tidak dikonfigurasi."})
-		return
-	}
-
 	lat := c.Query("lat")
 	lon := c.Query("lon")
 	if lat == "" || lon == "" {
@@ -248,11 +228,14 @@ func getAirPollutionHandler(c *gin.Context) {
 		return
 	}
 
+	// Membaca body respons untuk diteruskan langsung
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca respons dari layanan kualitas udara"})
 		return
 	}
 
+	// Mengirimkan kembali body JSON mentah dari OpenWeatherMap
+	// Ini memastikan struktur data (termasuk 'list') tetap sama
 	c.Data(http.StatusOK, "application/json", body)
 }
