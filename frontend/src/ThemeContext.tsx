@@ -1,76 +1,56 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
+// Impor 'type' ditambahkan untuk ReactNode dan MouseEvent
+import { createContext, useContext, useState, useEffect, type ReactNode, type MouseEvent } from 'react';
 
 // Tipe tetap sama
 type Theme = 'light' | 'dark';
 interface ThemeContextType {
   theme: Theme;
-  // --- UBAH INI ---
-  // toggleTheme sekarang akan menerima event klik
-  toggleTheme: (event: React.MouseEvent) => void; 
+  toggleTheme: (event: MouseEvent) => void; 
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const getInitialTheme = (): Theme => {
-  if (typeof window !== 'undefined') {
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    return storedTheme || 'light';
-  }
+  // Langsung kembalikan 'light' sebagai default, tanpa memeriksa localStorage atau preferensi sistem.
   return 'light';
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
-  // Effect ini sekarang hanya untuk mengatur tema awal saat load
+  // Effect ini sekarang menjadi SATU-SATUNYA sumber kebenaran.
+  // Ini berjalan saat 'theme' berubah, memperbarui DOM dan localStorage.
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-  }, []); // <-- Array kosong berarti ini hanya berjalan sekali saat load
+    localStorage.setItem('theme', theme);
+  }, [theme]); // <-- DEPENDENSI [theme] SANGAT PENTING
 
-  // --- UBAH FUNGSI INI ---
-  const toggleTheme = (event: React.MouseEvent) => {
+  const toggleTheme = (event: MouseEvent) => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
 
-    // Fallback untuk browser lama (Firefox, Safari)
-    // @ts-ignore
+    // @ts-ignore - document.startViewTransition
     if (!document.startViewTransition) {
-      setTheme(newTheme);
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
+      setTheme(newTheme); // Cukup update state, useEffect akan menangani DOM/localStorage
       return;
     }
 
     // --- Logika Animasi View Transition ---
-
-    // 1. Dapatkan koordinat klik
     const x = event.clientX;
     const y = event.clientY;
-
-    // 2. Hitung radius terbesar untuk menutupi layar
     const endRadius = Math.hypot(
       Math.max(x, window.innerWidth - x),
       Math.max(y, window.innerHeight - y)
     );
 
-    // 3. Simpan koordinat & radius sebagai variabel CSS
     document.documentElement.style.setProperty('--clip-x', `${x}px`);
     document.documentElement.style.setProperty('--clip-y', `${y}px`);
     document.documentElement.style.setProperty('--clip-r', `${endRadius}px`);
 
-    // 4. Mulai transisi
-    // @ts-ignore
+    // @ts-ignore - document.startViewTransition
     document.startViewTransition(() => {
-      // Kode ini dieksekusi setelah "snapshot" lama diambil
-      
-      // A. Perbarui DOM secara sinkron
-      document.documentElement.setAttribute('data-theme', newTheme);
-      
-      // B. Perbarui state React
+      // CUKUP PERBARUI STATE REACT.
+      // useEffect yang sudah kita perbaiki akan menangani sisanya.
       setTheme(newTheme);
-
-      // C. Perbarui localStorage
-      localStorage.setItem('theme', newTheme);
     });
   };
 

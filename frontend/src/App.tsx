@@ -1,65 +1,9 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, useMemo, useRef } from 'react';
-import './App.css'; // Pastikan impor CSS ini ada
+// HAPUS: import React from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'; // React tidak perlu diimpor lagi
+import './App.css'; 
+import { useTheme } from './ThemeContext'; 
 
-// --- Theme Context (Defined within App.tsx as it cannot be imported) ---
-interface ThemeContextType {
-  theme: 'light' | 'dark';
-  toggleTheme: (event: React.MouseEvent<HTMLButtonElement>) => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-
-    // @ts-ignore - document.startViewTransition is potentially experimental
-    if (!document.startViewTransition) {
-      setTheme(newTheme);
-      document.documentElement.setAttribute('data-theme', newTheme);
-      return;
-    }
-
-    const x = event.clientX;
-    const y = event.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
-
-    // @ts-ignore - document.startViewTransition is potentially experimental
-    document.startViewTransition(() => {
-      setTheme(newTheme);
-      document.documentElement.setAttribute('data-theme', newTheme);
-      document.documentElement.style.setProperty('--clip-x', `${x}px`);
-      document.documentElement.style.setProperty('--clip-y', `${y}px`);
-      document.documentElement.style.setProperty('--clip-r', `${endRadius}px`);
-    });
-  }, [theme]);
-
-  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-};
-
-const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-// --- Definisi Tipe ---
+// --- Definisi Tipe (Salin dari file Anda) ---
 interface CleanedCity {
   lat: number;
   lon: number;
@@ -108,8 +52,8 @@ interface AirPollutionResponse {
   }[];
 }
 
-// --- Konfigurasi & Fungsi Helper ---
-const API_BASE_URL = '/api'; // Ganti jika perlu
+// --- Konfigurasi & Fungsi Helper (Salin dari file Anda) ---
+const API_BASE_URL = '/api';
 const getWeatherIconUrl = (iconCode: string): string => {
   const baseUrl = "https://www.amcharts.com/wp-content/themes/amcharts4/css/img/icons/weather/animated/";
   let iconName: string;
@@ -126,7 +70,7 @@ const getWeatherIconUrl = (iconCode: string): string => {
     case '11d': case '11n': iconName = 'thunder.svg'; break;
     case '13d': case '13n': iconName = 'snowy-6.svg'; break;
     case '50d': case '50n': iconName = 'fog.svg'; break;
-    default: iconName = 'weather.svg'; break; // Fallback icon
+    default: iconName = 'weather.svg'; break;
   }
   return `${baseUrl}${iconName}`;
 };
@@ -165,10 +109,9 @@ const getWindDirectionText = (deg: number): string => {
   return directions[index] || 'Utara';
 };  
 
-
-// --- Komponen Inti Aplikasi (agar bisa menggunakan useTheme) ---
-function AppContent() {
-  const { theme, toggleTheme } = useTheme();
+// --- Komponen Inti Aplikasi ---
+function App() {
+  const { theme, toggleTheme } = useTheme(); 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CleanedCity[]>([]);
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
@@ -176,7 +119,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [isSearchActive, setIsSearchActive] = useState(false); // State untuk search mobile
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // --- Fungsi Fetch Data ---
@@ -185,53 +128,47 @@ function AppContent() {
     setError(null);
     setWeatherData(null);
     setAirQualityData(null);
-    setSearchResults([]); // Kosongkan hasil pencarian saat fetch baru
+    setSearchResults([]); 
 
-    // Helper untuk parse JSON dengan aman
     const safeJsonParse = async (response: Response) => {
       const contentType = response.headers.get("content-type");
       if (response.ok && contentType && contentType.includes("application/json")) {
         return response.json();
       }
-      // Jika bukan JSON atau error, coba baca sebagai teks
       const errorText = await response.text();
       throw new Error(`Respons server tidak valid. Status: ${response.status}. Pesan: ${errorText.substring(0, 200)}...`);
     };
 
     try {
-      // Panggil API secara paralel
       const [weatherResponse, airPollutionResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/weather?lat=${lat}&lon=${lon}`),
         fetch(`${API_BASE_URL}/air-pollution?lat=${lat}&lon=${lon}`)
       ]);
 
-      // Parse respons
       const weatherDataResult = await safeJsonParse(weatherResponse);
       const airDataResult = await safeJsonParse(airPollutionResponse);
 
-      // Set state
       setWeatherData(weatherDataResult);
       setAirQualityData(airDataResult);
 
     } catch (err: any) {
-      console.error("Gagal mengambil data:", err); // Log error asli
-      setError(err.message || "Terjadi kesalahan saat mengambil data."); // Tampilkan pesan error
+      console.error("Gagal mengambil data:", err);
+      setError(err.message || "Terjadi kesalahan saat mengambil data.");
     } finally {
       setLoading(false);
-      setLocationLoading(false); // Pastikan loading lokasi berhenti
+      setLocationLoading(false);
     }
-  }, []); // useCallback tanpa dependensi
+  }, []); 
 
   // --- Fungsi Cari Kota ---
   const fetchCities = async (query: string) => {
     if (query.length < 3) {
-      setSearchResults([]); // Jangan cari jika query terlalu pendek
+      setSearchResults([]);
       return;
     }
     try {
       const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
       if (!response.ok) {
-        // Handle error pencarian jika perlu
         console.error("Error mencari kota:", response.statusText);
         setSearchResults([]);
         return;
@@ -240,33 +177,32 @@ function AppContent() {
       setSearchResults(data);
     } catch (error) {
       console.error("Gagal mencari kota:", error);
-      setSearchResults([]); // Kosongkan jika ada error
+      setSearchResults([]);
     }
   };
 
   // --- Handler Event ---
   const handleCitySelect = (city: CleanedCity) => {
-    setSearchQuery(city.displayName); // Update input search
-    setSearchResults([]); // Sembunyikan hasil
-    fetchAllData(city.lat, city.lon); // Ambil data cuaca kota terpilih
-    setIsSearchActive(false); // Tutup search mobile
+    setSearchQuery(city.displayName);
+    setSearchResults([]);
+    fetchAllData(city.lat, city.lon);
+    setIsSearchActive(false);
   };
 
   const handleUseMyLocation = useCallback(() => {
     if (navigator.geolocation) {
       setLocationLoading(true);
-      setError(null); // Reset error
-      setSearchQuery(''); // Kosongkan search bar
+      setError(null);
+      setSearchQuery('');
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           fetchAllData(latitude, longitude);
         },
         (err) => {
-          // Handle error geolocation
-          setLoading(false); // Hentikan loading utama jika perlu
+          setLoading(false);
           setLocationLoading(false);
-          setWeatherData(null); // Kosongkan data lama
+          setWeatherData(null);
           setAirQualityData(null);
           let errorMessage = "Tidak bisa mengakses lokasi.";
           switch (err.code) {
@@ -282,13 +218,13 @@ function AppContent() {
           }
           setError(errorMessage);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 } // Opsi geolocation
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
       );
     } else {
       setError("Geolocation tidak didukung oleh browser ini.");
-      setLoading(false); // Hentikan loading jika geolocation tidak didukung
+      setLoading(false);
     }
-  }, [fetchAllData]); // Tambahkan fetchAllData sebagai dependensi
+  }, [fetchAllData]); 
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -297,8 +233,8 @@ function AppContent() {
 
   // --- Effect untuk Fetch Data Awal ---
   useEffect(() => {
-    handleUseMyLocation(); // Coba ambil lokasi saat pertama kali load
-  }, [handleUseMyLocation]); // Jalankan hanya sekali saat mount
+    handleUseMyLocation();
+  }, [handleUseMyLocation]); 
 
   // --- Data yang akan Dirender ---
   const todayWeather = weatherData?.list?.[0];
@@ -307,22 +243,20 @@ function AppContent() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  // --- Render ---
+  // --- Render (JSX tetap sama) ---
   return (
+    // ... JSX LENGKAP DARI FILE App.tsx ANDA DIMULAI DARI SINI ...
     <div className="container">
       <header className={`header ${isSearchActive ? 'search-active' : ''}`}>
-        {/* Tombol Search/Back Mobile */}
-        <div 
+        {/* ... Konten header ... */}
+        <div 
           className="mobile-search-toggle"
           onClick={() => {
-            // Cek state SEKARANG, lalu lakukan kebalikannya
             if (isSearchActive) {
-              // Jika PENCARIAN AKTIF (logika "Tutup")
               setIsSearchActive(false);
               handleClearSearch();
               searchInputRef.current?.blur();
             } else {
-              // Jika PENCARIAN TIDAK AKTIF (logika "Buka")
               setIsSearchActive(true);
               setTimeout(() => {
                 searchInputRef.current?.focus();
@@ -330,12 +264,10 @@ function AppContent() {
             }
           }}
         >
-          {/* Kedua span ini sekarang HANYA untuk tampilan, tanpa onClick */}
           <span className="material-symbols-rounded mobile-search-icon">search</span>
           <span className="material-symbols-rounded mobile-back-icon">arrow_back</span>
         </div>
 
-        {/* Search Bar */}
         <div className="search-container">
           <span className="material-symbols-rounded search-icon-left">search</span>
           <input
@@ -363,7 +295,6 @@ function AppContent() {
           )}
         </div>
 
-        {/* Tombol Aksi */}
         <div className="header-actions">
           <button className="location-button" onClick={handleUseMyLocation} disabled={locationLoading || loading} aria-label="Gunakan Lokasi Saya">
             {locationLoading ? <div className="loading-spinner"></div> : <span className="material-symbols-rounded">my_location</span>}
@@ -375,42 +306,33 @@ function AppContent() {
       </header>
 
       <main className="dashboard">
-        {loading && !error && ( // Tampilkan loading hanya jika tidak ada error
+        {/* ... Konten main (loading, error, atau data) ... */}
+         {loading && !error && (
           <div className="loading-container">
             <div className="loading-spinner large"></div>
             <p>Mengambil data terbaru...</p>
           </div>
         )}
-        {error && ( // Tampilkan error jika ada
+        {error && (
           <div className="error-message">
-            {/* Ikon Error yang besar */}
             <span className="material-symbols-rounded">sentiment_dissatisfied</span> 
-            
-            {/* Judul Error */}
             <strong>Gagal Memuat Data</strong>
-            
-            {/* Detail Pesan Error */}
             <p>{error}</p>
-
-            {/* Tombol coba lagi */}
             {error !== "Geolocation tidak didukung oleh browser ini." && (
                  <button className="retry-button" onClick={handleUseMyLocation}>
                     Coba Lagi dengan Lokasi Saya
                  </button>
             )}
-            
-            {/* Pesan alternatif */}
             <p style={{marginTop: '4px', fontSize: '0.9em', color: 'var(--on-surface-variant)'}}>
                 Atau gunakan kolom pencarian di bagian atas layar.
             </p>
           </div>
         )}
-        {weatherData && todayWeather && todayAirQuality && !error && !loading && ( // Tampilkan data jika valid dan tidak loading/error
+        {weatherData && todayWeather && todayAirQuality && !error && !loading && (
           <>
-            {/* Kolom Kiri */}
             <section className="main-content">
-              {/* Kartu Cuaca Saat Ini */}
-              <div className="current-weather">
+              {/* ... Kartu Cuaca Saat Ini ... */}
+              <div className="current-weather">
                 <h2>Cuaca Saat Ini</h2>
                 <div className="current-temp-container">
                   <div className="temp-desc-wrapper">
@@ -418,7 +340,7 @@ function AppContent() {
                   </div>
                   <img src={getWeatherIconUrl(todayWeather.weather[0].icon)} alt={todayWeather.weather[0].description} className="weather-icon" />
               </div>
-                 <div className="description-of-weather"> {/* Wrapper tambahan jika perlu styling */}
+                 <div className="description-of-weather">
                     <p className="current-desc">{todayWeather.weather[0].description}</p>
                  </div>
                 <div className="location-and-date">
@@ -432,9 +354,8 @@ function AppContent() {
                   </div>
                 </div>
               </div>
-
-              {/* Kartu Ramalan 24 Jam */}
-              <div className="forecast-card">
+              {/* ... Kartu Ramalan 24 Jam ... */}
+              <div className="forecast-card">
                 <div className="aq-title-wrapper">
                   <span className="material-symbols-rounded aq-icon">avg_pace</span>
                   <h2>Ramalan 24 Jam</h2>
@@ -452,11 +373,10 @@ function AppContent() {
               </div>
             </section>
 
-            {/* Kolom Kanan */}
             <aside className="sidebar">
-              {/* Kartu Sorotan */}
-              <div className="highlights">
-                 <div className="aq-title-wrapper"> {/* Re-use class untuk layout judul */}
+              {/* ... Kartu Sorotan ... */}
+              <div className="highlights">
+                 <div className="aq-title-wrapper">
                     <span className="material-symbols-rounded highlight-title-icon">trending_up</span>
                     <h2>Sorotan Hari Ini</h2>
                  </div>
@@ -466,22 +386,18 @@ function AppContent() {
                   <HighlightCard icon="umbrella" title="Peluang Hujan" value={`${Math.round(todayWeather.pop * 100)}%`} />
                   <HighlightCard icon="sunny" title="Matahari Terbit" value={new Date(weatherData.city.sunrise * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} />
                   <HighlightCard icon="wb_twilight" title="Matahari Terbenam" value={new Date(weatherData.city.sunset * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} />
-                  {/* Tambahkan highlight lain jika ada */}
                 </div>
               </div>
-
-               {/* Kartu Kualitas Udara */}
-               <div className="forecast-card"> {/* Bungkus dalam forecast-card untuk styling konsisten */}
+              {/* ... Kartu Kualitas Udara ... */}
+              <div className="forecast-card">
                  <div className="aq-title-wrapper">
                      <span className="material-symbols-rounded aq-icon">airwave</span>
                      <h2>Indeks Kualitas Udara</h2>
                  </div>
                  <AirQualityCard aqi={todayAirQuality.main.aqi} components={todayAirQuality.components} />
                </div>
-
-
-              {/* Kartu Ramalan 5 Hari */}
-                <div className="forecast-card">
+              {/* ... Kartu Ramalan 5 Hari ... */}
+              <div className="forecast-card">
                   <div className="aq-title-wrapper">
                     <span className="material-symbols-rounded aq-icon">cloud</span>
                     <h2>Ramalan 5 Hari</h2>
@@ -498,12 +414,14 @@ function AppContent() {
         )}
       </main>
     </div>
+    // ... AKHIR DARI JSX ...
   );
 }
 
-// --- Sub-Komponen (Helper Components) ---
+// --- Sub-Komponen (Helper Components tetap sama) ---
 const HighlightCard = ({ icon, title, value }: { icon: string; title: string; value: string }) => (
-  <div className="highlight-item">
+  // ... JSX HighlightCard ...
+  <div className="highlight-item">
     <span className="material-symbols-rounded">{icon}</span>
     <div>
       <p className="highlight-title">{title}</p>
@@ -513,14 +431,14 @@ const HighlightCard = ({ icon, title, value }: { icon: string; title: string; va
 );
 
 const AirQualityCard = ({ aqi, components }: { aqi: number, components: AirPollutionResponse['list'][0]['components'] }) => (
-  <div className="air-quality-card">
+  // ... JSX AirQualityCard ...
+  <div className="air-quality-card">
     <div className="aq-summary">
         <p className={`aq-value ${getAqiClassName(aqi)}`}>
-            {getAqiDescription(aqi)} {/* Tampilkan juga nilai AQI */}
+            {getAqiDescription(aqi)}
         </p>
         </div>
     <div className="aq-components-grid">
-      {/* Pastikan komponen ada sebelum mengakses properti */}
       <div className="aq-component"><span>CO</span><p>{components?.co?.toFixed(1) ?? '-'} <small>μg/m³</small></p></div>
       <div className="aq-component"><span>NO₂</span><p>{components?.no2?.toFixed(1) ?? '-'} <small>μg/m³</small></p></div>
       <div className="aq-component"><span>O₃</span><p>{components?.o3?.toFixed(1) ?? '-'} <small>μg/m³</small></p></div>
@@ -529,20 +447,20 @@ const AirQualityCard = ({ aqi, components }: { aqi: number, components: AirPollu
   </div>
 );
 
-
 const HourCard = ({ item }: { item: WeatherListItem }) => (
-  <div className="hour-item">
+  // ... JSX HourCard ...
+  <div className="hour-item">
     <p className="hour-time">
       {new Date(item.dt * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
     </p>
-    {/* Tambahkan fallback jika ikon tidak ada */}
     <img src={getWeatherIconUrl(item.weather?.[0]?.icon || '')} alt={item.weather?.[0]?.description || 'Cuaca'} width="40" height="40"/>
-    <p className="hour-temp">{Math.round(item.main.temp)}°</p> {/* Hilangkan C */}
+    <p className="hour-temp">{Math.round(item.main.temp)}°</p>
   </div>
 );
 
 const WindHourCard = ({ item }: { item: WeatherListItem }) => (
-  <div className="wind-hour-item">
+  // ... JSX WindHourCard ...
+  <div className="wind-hour-item">
     <span className="wind-direction-text">{getWindDirectionText(item.wind.deg)}</span>
     <span
       className="material-symbols-rounded wind-direction-icon"
@@ -550,12 +468,12 @@ const WindHourCard = ({ item }: { item: WeatherListItem }) => (
     >
       navigation
     </span>
-    {/* Gunakan toFixed(1) dan tambahkan unit */}
     <span className="wind-speed">{item.wind.speed?.toFixed(1) ?? '-'} m/s</span>
     </div>
 );
 
-// --- Fungsi Proses Ramalan 5 Hari ---
+// --- Fungsi Proses Ramalan 5 Hari (tetap sama) ---
+// ... Kode process5DayForecast ...
 interface ProcessedDay {
   date: string;
   dayName: string;
@@ -565,19 +483,16 @@ interface ProcessedDay {
 }
 
 const process5DayForecast = (list: WeatherListItem[]): ProcessedDay[] => {
-  if (!list || list.length === 0) return []; // Handle jika list kosong
+  if (!list || list.length === 0) return [];
 
   const dailyData: { [key: string]: { temps: number[], icons: string[] } } = {};
 
-  // Kelompokkan data per hari
   list.forEach(item => {
-     if (item && item.dt) { // Cek item dan dt
-        // Dapatkan tanggal (YYYY-MM-DD) dalam UTC untuk konsistensi
+     if (item && item.dt) {
         const dateStr = new Date(item.dt * 1000).toISOString().split('T')[0];
         if (!dailyData[dateStr]) {
             dailyData[dateStr] = { temps: [], icons: [] };
         }
-        // Hanya tambahkan jika data valid
         if (item.main && typeof item.main.temp === 'number') {
            dailyData[dateStr].temps.push(item.main.temp);
         }
@@ -588,31 +503,27 @@ const process5DayForecast = (list: WeatherListItem[]): ProcessedDay[] => {
   });
 
 
-  // Proses data harian
   return Object.keys(dailyData)
-    .filter(date => dailyData[date].temps.length > 0 && dailyData[date].icons.length > 0) // Pastikan ada data suhu & ikon
-    .slice(0, 5) // Ambil maksimal 5 hari
+    .filter(date => dailyData[date].temps.length > 0 && dailyData[date].icons.length > 0)
+    .slice(0, 5)
     .map(date => {
       const dayTemps = dailyData[date].temps;
       const dayIcons = dailyData[date].icons;
 
-      // Cari ikon yang paling sering muncul
       const iconFrequency = dayIcons.reduce((acc, icon) => {
           acc[icon] = (acc[icon] || 0) + 1;
           return acc;
         }, {} as { [key: string]: number });
       const representativeIcon = Object.keys(iconFrequency).reduce(
-          (a, b) => (iconFrequency[a] > iconFrequency[b] ? a : b), dayIcons[0] || ''); // Fallback ikon pertama
+          (a, b) => (iconFrequency[a] > iconFrequency[b] ? a : b), dayIcons[0] || '');
 
-      // Dapatkan nama hari (pastikan menggunakan UTC agar tidak terpengaruh timezone lokal saat konversi)
-       const dayName = new Date(date + 'T00:00:00Z').toLocaleDateString('id-ID', { weekday: 'short', timeZone: 'UTC' }); // Gunakan 'short' untuk nama hari pendek
+       const dayName = new Date(date + 'T00:00:00Z').toLocaleDateString('id-ID', { weekday: 'short', timeZone: 'UTC' });
 
       return {
         date: date,
         dayName: dayName,
         temp_max: Math.round(Math.max(...dayTemps)),
         temp_min: Math.round(Math.min(...dayTemps)),
-        // Ganti ikon malam ('n') menjadi ikon siang ('d') untuk konsistensi
         icon: representativeIcon.replace('n', 'd'),
       };
     });
@@ -620,20 +531,12 @@ const process5DayForecast = (list: WeatherListItem[]): ProcessedDay[] => {
 
 
 const DayForecastItem = ({ day }: { day: ProcessedDay }) => (
-  <div className="day-item">
-     {/* Gunakan ikon representatif, fallback jika tidak ada */}
+  // ... JSX DayForecastItem ...
+  <div className="day-item">
     <img src={getWeatherIconUrl(day.icon || '')} alt="Ikon cuaca" width="40" height="40" />
     <span className="day-name">{day.dayName}</span>
-    {/* Tampilkan suhu maks/min */}
     <span className="day-temp">{day.temp_max}° / {day.temp_min}°</span>
   </div>
-);
-
-// --- Komponen App utama yang membungkus dengan Provider ---
-const App = () => (
-  <ThemeProvider>
-    <AppContent />
-  </ThemeProvider>
 );
 
 export default App;
