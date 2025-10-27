@@ -1,4 +1,4 @@
-package handler // <-- PERUBAHAN DI SINI
+package handler // <-- PERBAIKAN 1: Harus 'package handler'
 
 import (
 	"encoding/json"
@@ -103,11 +103,12 @@ func init() {
 
 	// Konfigurasi CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
+	config.AllowOrigins = []string{"*"} // Izinkan semua origin
 	config.AllowMethods = []string{"GET", "OPTIONS"} 
 	router.Use(cors.New(config))
 
-	// Daftarkan rute langsung ke router utama
+	// --- PERBAIKAN 2: Hapus prefix /api ---
+	// Rute didaftarkan langsung ke root karena Vercel sudah menanganinya
 	router.GET("/search", searchCitiesHandler)
 	router.GET("/weather", getWeatherHandler)
 	router.GET("/air-pollution", getAirPollutionHandler)
@@ -117,23 +118,13 @@ func init() {
 
 // --- HANDLER UTAMA (Ini yang dipanggil Vercel) ---
 
+// --- PERBAIKAN 3: Fungsi 'Handler' ini yang diekspor untuk Vercel ---
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Teruskan permintaan ke router Gin yang sudah diinisialisasi
 	router.ServeHTTP(w, r)
 }
 
-// --- FUNGSI UTAMA (HANYA UNTUK DEVELOPMENT LOKAL) ---
-func main() {
-	log.Println("Menjalankan server lokal di http://localhost:8080")
-	// init() sudah berjalan, jadi kita tinggal jalankan router
-	err := router.Run(":8080")
-	if err != nil {
-		log.Fatalf("Gagal menjalankan server lokal: %v", err)
-	}
-}
-
-
 // --- HANDLER & FUNGSI BANTUAN ---
+// (Semua fungsi handler Anda dari file asli)
 
 func searchCitiesHandler(c *gin.Context) {
 	query := c.Query("q")
