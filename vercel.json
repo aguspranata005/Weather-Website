@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.go",
+      "use": "@vercel/go"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/search",
+      "dest": "/api/search.go"
+    },
+    {
+      "src": "/api/weather",
+      "dest": "/api/weather.go"
+    },
+    {
+      "src": "/api/air-pollution",
+      "dest": "/api/air-pollution.go"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ]
+}
