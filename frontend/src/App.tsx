@@ -39,7 +39,6 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     // @ts-ignore - document.startViewTransition is potentially experimental
     document.startViewTransition(() => {
       setTheme(newTheme);
-      document.documentElement.setAttribute('data-theme', newTheme);
       document.documentElement.style.setProperty('--clip-x', `${x}px`);
       document.documentElement.style.setProperty('--clip-y', `${y}px`);
       document.documentElement.style.setProperty('--clip-r', `${endRadius}px`);
