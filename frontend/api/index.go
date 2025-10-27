@@ -1,4 +1,4 @@
-package main
+package handler // <-- PERUBAHAN DI SINI
 
 import (
 	"encoding/json"
@@ -27,7 +27,6 @@ const (
 )
 
 // --- STRUKTUR DATA (STRUCTS) ---
-// (Struktur data Anda dari file asli)
 
 type CleanedCity struct {
 	Name        string  `json:"name"`
@@ -91,13 +90,11 @@ type AirPollutionResponse struct {
 
 func init() {
 	// Memuat environment variable (untuk development lokal)
-	// Di Vercel, variabel akan diambil dari dashboard.
 	if err := godotenv.Load(); err != nil {
 		log.Println("Peringatan: file .env tidak ditemukan. Menggunakan env sistem.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
-		// Jangan gunakan log.Fatal di serverless, cukup catat peringatan
 		log.Println("PERINGATAN: OPENWEATHER_API_KEY tidak diatur. Panggilan API akan gagal.")
 	}
 
@@ -106,14 +103,11 @@ func init() {
 
 	// Konfigurasi CORS
 	config := cors.DefaultConfig()
-	// Izinkan semua origin untuk kesederhanaan di Vercel
 	config.AllowOrigins = []string{"*"}
-	config.AllowMethods = []string{"GET", "OPTIONS"} // Hanya izinkan metode yang diperlukan
+	config.AllowMethods = []string{"GET", "OPTIONS"} 
 	router.Use(cors.New(config))
 
-	// --- PERUBAHAN PENTING ---
-	// Hapus grup router "/api". Vercel sudah menangani prefix /api.
-	// Daftarkan rute langsung ke router utama.
+	// Daftarkan rute langsung ke router utama
 	router.GET("/search", searchCitiesHandler)
 	router.GET("/weather", getWeatherHandler)
 	router.GET("/air-pollution", getAirPollutionHandler)
@@ -123,16 +117,12 @@ func init() {
 
 // --- HANDLER UTAMA (Ini yang dipanggil Vercel) ---
 
-// Vercel akan memanggil fungsi 'Handler' ini untuk setiap permintaan
-// yang masuk ke /api/...
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// Teruskan permintaan ke router Gin yang sudah diinisialisasi
 	router.ServeHTTP(w, r)
 }
 
 // --- FUNGSI UTAMA (HANYA UNTUK DEVELOPMENT LOKAL) ---
-// Fungsi main ini HANYA akan berjalan jika Anda menjalankan `go run .`
-// di dalam folder `api`. Vercel tidak akan menggunakan ini.
 func main() {
 	log.Println("Menjalankan server lokal di http://localhost:8080")
 	// init() sudah berjalan, jadi kita tinggal jalankan router
@@ -144,7 +134,6 @@ func main() {
 
 
 // --- HANDLER & FUNGSI BANTUAN ---
-// (Semua fungsi handler Anda dari file asli)
 
 func searchCitiesHandler(c *gin.Context) {
 	query := c.Query("q")
@@ -153,7 +142,6 @@ func searchCitiesHandler(c *gin.Context) {
 		return
 	}
 
-	// Periksa API key sebelum melakukan panggilan
 	if openWeatherAPIKey == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "API Key server tidak terkonfigurasi."})
 		return
