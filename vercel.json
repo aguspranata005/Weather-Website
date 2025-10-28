@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/main.go",
+      "use": "@vercel/go",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "goVersion": "1.22"
+      }
+    },
+    {
+      "src": "frontend/index.html",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/main.go"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ]
+}
