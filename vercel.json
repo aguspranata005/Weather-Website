@@ -19,8 +19,8 @@
       "destination": "/backend/main.go"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/dist/index.html"
+      "source": "/((?!api/|[^/]+\\.[^/]+$).*)",
+      "destination": "/index.html"
     }
   ]
 }
