@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "npm run build && mv dist ../" 
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@material/web": "^2.3.0",
