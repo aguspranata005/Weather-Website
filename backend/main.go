@@ -1,5 +1,5 @@
-// Pastikan ini adalah `package main`
-package main
+// Pastikan ini adalah `package handler`
+package handler
 
 import (
 	"encoding/json"
