@@ -10,11 +10,11 @@
       }
     },
     {
-      "src": "frontend/package.json",
+      "src": "frontend/**",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "frontend/dist",
-        "buildCommand": "pnpm install --prefix frontend && pnpm run build --prefix frontend"
+        "buildCommand": "npm install --prefix frontend && npm run build --prefix frontend"
       }
     }
   ],
