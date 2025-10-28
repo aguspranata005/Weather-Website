@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -12,18 +12,16 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-)
+ )
 
 // --- KONFIGURASI & VARIABEL GLOBAL ---
 
 var openWeatherAPIKey string
-
-// Konstanta untuk URL API OpenWeatherMap agar mudah dikelola.
 const (
 	geoAPIURL          = "https://api.openweathermap.org/geo/1.0/direct"
 	forecastAPIURL     = "https://api.openweathermap.org/data/2.5/forecast"
 	airPollutionAPIURL = "https://api.openweathermap.org/data/2.5/air_pollution"
-)
+ )
 
 // --- STRUKTUR DATA (STRUCTS) ---
 
@@ -61,7 +59,7 @@ type WeatherResponse struct {
 		} `json:"weather"`
 		Wind struct {
 			Speed float64 `json:"speed"`
-			Deg   float64 `json:"deg"` // <-- [PERBAIKAN] BARIS INI DITAMBAHKAN
+			Deg   float64 `json:"deg"` 
 		} `json:"wind"`
 		Pop float64 `json:"pop"` // Probability of precipitation
 	} `json:"list"`
@@ -89,24 +87,29 @@ type AirPollutionResponse struct {
 	} `json:"list"`
 }
 
-// --- FUNGSI UTAMA (MAIN) ---
+// --- FUNGSI UTAMA (HANDLER) ---
 
-func main() {
+func Handler(w http.ResponseWriter, r *http.Request ) {
 	// Memuat environment variable dari file .env.
+	// Ini hanya berguna untuk local development, Vercel akan menggunakan env var dari dashboard.
 	if err := godotenv.Load(); err != nil {
 		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
 	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
-		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
+		// Log ini akan muncul di log Vercel Lambda jika env var tidak diset
+		log.Println("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. API mungkin gagal.")
 	}
 
 	// Inisialisasi Gin Router.
 	router := gin.Default()
 
 	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
+	// Di Vercel, ini mungkin tidak terlalu penting karena keduanya berada di domain yang sama,
+	// tetapi baik untuk menjaga konfigurasi lokal.
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
+	// Di Vercel, Anda bisa menggunakan AllowAllOrigins = true atau mengatur domain Vercel Anda
+	config.AllowOrigins = []string{"*"} // Mengizinkan semua origin untuk kemudahan deployment
 	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
@@ -114,13 +117,12 @@ func main() {
 	{
 		api.GET("/search", searchCitiesHandler)
 		api.GET("/weather", getWeatherHandler)
-		// [DIPERBAIKI] Mengubah endpoint agar cocok dengan panggilan dari frontend.
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
 
 	// Menjalankan server
-	log.Println("Server backend berjalan di http://localhost:8080")
-	router.Run(":8080")
+	// Di Vercel, kita menggunakan router.ServeHTTP untuk melayani permintaan tunggal.
+	router.ServeHTTP(w, r)
 }
 
 // --- HANDLER & FUNGSI BANTUAN ---
@@ -129,27 +131,27 @@ func main() {
 func searchCitiesHandler(c *gin.Context) {
 	query := c.Query("q")
 	if query == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Query pencarian 'q' tidak boleh kosong"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Query pencarian 'q' tidak boleh kosong"} )
 		return
 	}
 
 	apiURL := fmt.Sprintf("%s?q=%s&limit=5&appid=%s", geoAPIURL, query, openWeatherAPIKey)
-	resp, err := http.Get(apiURL)
+	resp, err := http.Get(apiURL )
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan geocoding"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan geocoding"} )
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body )
 		c.JSON(resp.StatusCode, gin.H{"error": "Error dari layanan geocoding", "details": string(body)})
 		return
 	}
 
 	var geoResults []geoResult
 	if err := json.NewDecoder(resp.Body).Decode(&geoResults); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mem-parsing respons geocoding"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mem-parsing respons geocoding"} )
 		return
 	}
 
@@ -170,7 +172,7 @@ func searchCitiesHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, cleanedCities)
+	c.JSON(http.StatusOK, cleanedCities )
 }
 
 // getWeatherHandler menangani permintaan data cuaca lengkap.
@@ -178,52 +180,52 @@ func getWeatherHandler(c *gin.Context) {
 	lat := c.Query("lat")
 	lon := c.Query("lon")
 	if lat == "" || lon == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Parameter 'lat' dan 'lon' dibutuhkan"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Parameter 'lat' dan 'lon' dibutuhkan"} )
 		return
 	}
 
 	apiURL := fmt.Sprintf("%s?lat=%s&lon=%s&appid=%s&units=metric&lang=id", forecastAPIURL, lat, lon, openWeatherAPIKey)
-	resp, err := http.Get(apiURL)
+	resp, err := http.Get(apiURL )
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan cuaca"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan cuaca"} )
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body )
 		c.JSON(resp.StatusCode, gin.H{"error": "Error dari layanan cuaca", "details": string(body)})
 		return
 	}
 
 	var weatherData WeatherResponse
 	if err := json.NewDecoder(resp.Body).Decode(&weatherData); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "GGagal mem-parsing data cuaca"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "GGagal mem-parsing data cuaca"} )
 		return
 	}
 
-	c.JSON(http.StatusOK, weatherData)
+	c.JSON(http.StatusOK, weatherData )
 }
 
-// [DIPERBAIKI] getAirPollutionHandler sekarang mengirimkan respons yang sesuai dengan harapan frontend.
+// getAirPollutionHandler menangani permintaan data kualitas udara.
 func getAirPollutionHandler(c *gin.Context) {
 	lat := c.Query("lat")
 	lon := c.Query("lon")
 	if lat == "" || lon == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Parameter 'lat' dan 'lon' dibutuhkan"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Parameter 'lat' dan 'lon' dibutuhkan"} )
 		return
 	}
 
 	apiURL := fmt.Sprintf("%s?lat=%s&lon=%s&appid=%s", airPollutionAPIURL, lat, lon, openWeatherAPIKey)
-	resp, err := http.Get(apiURL)
+	resp, err := http.Get(apiURL )
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan kualitas udara"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gagal terhubung ke layanan kualitas udara"} )
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body )
 		c.JSON(resp.StatusCode, gin.H{"error": "Error dari layanan kualitas udara", "details": string(body)})
 		return
 	}
@@ -231,11 +233,10 @@ func getAirPollutionHandler(c *gin.Context) {
 	// Membaca body respons untuk diteruskan langsung
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca respons dari layanan kualitas udara"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca respons dari layanan kualitas udara"} )
 		return
 	}
 
 	// Mengirimkan kembali body JSON mentah dari OpenWeatherMap
-	// Ini memastikan struktur data (termasuk 'list') tetap sama
-	c.Data(http.StatusOK, "application/json", body)
+	c.Data(http.StatusOK, "application/json", body )
 }

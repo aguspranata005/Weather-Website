@@ -13,7 +13,8 @@
       "src": "frontend/index.html",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/dist"
+        "distDir": "frontend/dist",
+        "buildCommand": "pnpm install --prefix frontend && pnpm run build --prefix frontend"
       }
     }
   ],
