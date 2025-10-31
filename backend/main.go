@@ -111,16 +111,21 @@ func main() {
 	router := gin.Default()
 
 	// --- Konfigurasi CORS (PENTING UNTUK DEPLOYMENT) ---
-	// Ambil URL frontend dari environment variable
+	config := cors.DefaultConfig()
+
+	// Mulai dengan daftar origin lokal yang selalu valid
+	origins := []string{"http://localhost:5173", "http://127.0.0.1:5173"}
+
+	// Ambil URL frontend dari environment
 	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173" // Fallback untuk lokal
+	
+	// HANYA tambahkan URL frontend JIKA tidak kosong
+	if frontendURL != "" {
+		origins = append(origins, frontendURL)
 	}
 
-	config := cors.DefaultConfig()
-	// Izinkan localhost DAN URL frontend produksi
-	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173", frontendURL}
-	router.Use(cors.New(config))
+	config.AllowOrigins = origins
+	router.Use(cors.New(config)) // Baris ini yang menyebabkan error (sebelumnya line 123)
 	
 	// Izinkan semua proxy (diperlukan untuk Railway)
 	router.SetTrustedProxies(nil)
