@@ -61,7 +61,7 @@ type WeatherResponse struct {
 		} `json:"weather"`
 		Wind struct {
 			Speed float64 `json:"speed"`
-			Deg   float64 `json:"deg"`
+			Deg   float64 `json:"deg"` // <-- [PERBAIKAN] BARIS INI DITAMBAHKAN
 		} `json:"wind"`
 		Pop float64 `json:"pop"` // Probability of precipitation
 	} `json:"list"`
@@ -74,6 +74,7 @@ type WeatherResponse struct {
 }
 
 // AirPollutionResponse adalah struct untuk menampung response dari Air Pollution API.
+// Struct ini dibuat agar cocok dengan apa yang diharapkan oleh frontend.
 type AirPollutionResponse struct {
 	List []struct {
 		Main struct {
@@ -91,68 +92,38 @@ type AirPollutionResponse struct {
 // --- FUNGSI UTAMA (MAIN) ---
 
 func main() {
-	// Memuat environment variable dari file .env (hanya untuk lokal).
+	// Memuat environment variable dari file .env.
 	if err := godotenv.Load(); err != nil {
-		log.Println("Peringatan: file .env tidak ditemukan. (Ini normal di produksi)")
+		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
 	}
-	
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
 		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
 	}
 
-	// Atur GIN_MODE ke "release" di produksi
-	ginMode := os.Getenv("GIN_MODE")
-	if ginMode == "release" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	// Inisialisasi Gin Router.
 	router := gin.Default()
 
-	// --- Konfigurasi CORS (PENTING UNTUK DEPLOYMENT) ---
+	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
 	config := cors.DefaultConfig()
-
-	// Mulai dengan daftar origin lokal yang selalu valid
-	origins := []string{"http://localhost:5173", "http://127.0.0.1:5173"}
-
-	// Ambil URL frontend dari environment
-	frontendURL := os.Getenv("FRONTEND_URL")
-	
-	// HANYA tambahkan URL frontend JIKA tidak kosong
-	if frontendURL != "" {
-		origins = append(origins, frontendURL)
-	}
-
-	config.AllowOrigins = origins
-	router.Use(cors.New(config)) // Baris ini yang menyebabkan error (sebelumnya line 123)
-	
-	// Izinkan semua proxy (diperlukan untuk Railway)
-	router.SetTrustedProxies(nil)
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
+	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
 	api := router.Group("/api")
 	{
 		api.GET("/search", searchCitiesHandler)
 		api.GET("/weather", getWeatherHandler)
+		// [DIPERBAIKI] Mengubah endpoint agar cocok dengan panggilan dari frontend.
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
 
-	// --- Konfigurasi Port (PENTING UNTUK DEPLOYMENT) ---
-	// Ambil PORT dari environment variable yang disediakan Railway
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // Fallback jika PORT tidak diatur (untuk lokal)
-	}
-
 	// Menjalankan server
-	log.Printf("Server backend berjalan di port :%s", port)
-	router.Run(":" + port) // Gunakan port dari Railway
+	log.Println("Server backend berjalan di http://localhost:8080")
+	router.Run(":8080")
 }
 
 // --- HANDLER & FUNGSI BANTUAN ---
-
-// (Semua fungsi handler Anda yang lain tetap sama)
 
 // searchCitiesHandler menangani permintaan pencarian kota.
 func searchCitiesHandler(c *gin.Context) {
@@ -227,14 +198,14 @@ func getWeatherHandler(c *gin.Context) {
 
 	var weatherData WeatherResponse
 	if err := json.NewDecoder(resp.Body).Decode(&weatherData); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mem-parsing data cuaca"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "GGagal mem-parsing data cuaca"})
 		return
 	}
 
 	c.JSON(http.StatusOK, weatherData)
 }
 
-// getAirPollutionHandler menangani permintaan data polusi udara.
+// [DIPERBAIKI] getAirPollutionHandler sekarang mengirimkan respons yang sesuai dengan harapan frontend.
 func getAirPollutionHandler(c *gin.Context) {
 	lat := c.Query("lat")
 	lon := c.Query("lon")
@@ -265,5 +236,6 @@ func getAirPollutionHandler(c *gin.Context) {
 	}
 
 	// Mengirimkan kembali body JSON mentah dari OpenWeatherMap
+	// Ini memastikan struktur data (termasuk 'list') tetap sama
 	c.Data(http.StatusOK, "application/json", body)
 }
