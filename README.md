@@ -71,17 +71,8 @@ The frontend will connect to the backend at `http://localhost:8080` by default.
 
 ## 📱 Screenshots
 
-[Add your application screenshots here]
-
-## 🤝 Contributing
-
-Contributions, issues and feature requests are welcome!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+![alt text](weather-light.png)
+![alt text](weather-dark.png)
 
 ## 📝 License
 
@@ -89,7 +80,7 @@ This project is [MIT](https://opensource.org/licenses/MIT) licensed.
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGithubUsername](https://github.com/YourGithubUsername)
+- **Agus Pranata** - *Build a weather forecast app* - [aguspranata005](https://github.com/aguspranata005)
 
 ## 🙏 Acknowledgments
 
@@ -99,4 +90,4 @@ This project is [MIT](https://opensource.org/licenses/MIT) licensed.
 - Go community for backend support
 
 ---
-<p align="center">Made with ❤️ for better weather tracking</p>
+<p align="center">Made with ❤️ Agus Pranata</p>
