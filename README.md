@@ -40,7 +40,7 @@
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/weather-website.git
+git clone https://github.com/aguspranata005/weather-website.git
 cd weather-website
 ```
 
