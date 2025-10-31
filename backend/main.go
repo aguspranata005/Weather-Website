@@ -105,8 +105,15 @@ func main() {
 	router := gin.Default()
 
 	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
+	// Ambil URL frontend dari environment variable
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173" // Fallback untuk lokal
+	}
+
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
+	// Izinkan localhost DAN URL frontend produksi
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173", frontendURL}
 	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
@@ -119,8 +126,8 @@ func main() {
 	}
 
 	// Menjalankan server
-	log.Println("Server backend berjalan di http://localhost:8080")
-	router.Run(":8080")
+	log.Printf("Server backend berjalan di http://localhost:%s", port)
+	router.Run(":" + port) // Gunakan port dari Railway
 }
 
 // --- HANDLER & FUNGSI BANTUAN ---
