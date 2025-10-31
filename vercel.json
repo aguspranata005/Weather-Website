@@ -7,20 +7,13 @@
     },
     {
       "src": "frontend/package.json",
-      "use": "@vercel/vite",
-      "config": {
-        "outputDirectory": "frontend/dist"
-      }
+      "use": "@vercel/vite"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "backend/main.go"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/$1"
     }
   ]
 }
