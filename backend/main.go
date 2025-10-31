@@ -1,4 +1,4 @@
-package handler // <-- [PERUBAHAN]
+package main
 
 import (
 	"encoding/json"
@@ -11,14 +11,14 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	// "github.com/joho/godotenv" // <-- [DIHAPUS] Tidak perlu di Vercel
+	"github.com/joho/godotenv"
 )
 
 // --- KONFIGURASI & VARIABEL GLOBAL ---
 
 var openWeatherAPIKey string
 
-// Konstanta untuk URL API OpenWeatherMap
+// Konstanta untuk URL API OpenWeatherMap agar mudah dikelola.
 const (
 	geoAPIURL          = "https://api.openweathermap.org/geo/1.0/direct"
 	forecastAPIURL     = "https://api.openweathermap.org/data/2.5/forecast"
@@ -26,7 +26,6 @@ const (
 )
 
 // --- STRUKTUR DATA (STRUCTS) ---
-// (Struktur data Anda dari file asli disalin di sini)
 
 // CleanedCity adalah struct untuk data kota yang sudah bersih dan siap dikirim ke frontend.
 type CleanedCity struct {
@@ -75,6 +74,7 @@ type WeatherResponse struct {
 }
 
 // AirPollutionResponse adalah struct untuk menampung response dari Air Pollution API.
+// Struct ini dibuat agar cocok dengan apa yang diharapkan oleh frontend.
 type AirPollutionResponse struct {
 	List []struct {
 		Main struct {
@@ -89,29 +89,27 @@ type AirPollutionResponse struct {
 	} `json:"list"`
 }
 
-// --- [PERUBAHAN] Inisialisasi Router ---
-var router *gin.Engine
+// --- FUNGSI UTAMA (MAIN) ---
 
-// init() berjalan sekali saat serverless function dimulai
-func init() {
-	// Variabel API Key dibaca dari Environment Variables Vercel
+func main() {
+	// Memuat environment variable dari file .env.
+	if err := godotenv.Load(); err != nil {
+		log.Println("Peringatan: file .env tidak ditemukan. Pastikan OPENWEATHER_API_KEY diatur di environment sistem.")
+	}
 	openWeatherAPIKey = os.Getenv("OPENWEATHER_API_KEY")
 	if openWeatherAPIKey == "" {
-		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur.")
+		log.Fatal("FATAL: Environment variable OPENWEATHER_API_KEY tidak diatur. Aplikasi tidak dapat berjalan.")
 	}
 
 	// Inisialisasi Gin Router.
-	router = gin.Default()
+	router := gin.Default()
 
-	// Konfigurasi CORS (Cross-Origin Resource Sharing)
+	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
 	config := cors.DefaultConfig()
-	// Izinkan SEMUA origin. Ini aman untuk Vercel karena backend
-	// hanya merespons permintaan yang datang melalui domain Vercel Anda.
-	config.AllowOrigins = []string{"*"}
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173"} // Sesuaikan dengan alamat frontend Anda
 	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
-	// Ini PENTING agar cocok dengan konfigurasi vercel.json
 	api := router.Group("/api")
 	{
 		api.GET("/search", searchCitiesHandler)
@@ -120,19 +118,12 @@ func init() {
 		api.GET("/air-pollution", getAirPollutionHandler)
 	}
 
-	// [DIHAPUS] Tidak ada router.Run() di mode serverless
+	// Menjalankan server
+	log.Println("Server backend berjalan di http://localhost:8080")
+	router.Run(":8080")
 }
-
-// --- [PERUBAHAN] FUNGSI HANDLER UTAMA ---
-// Vercel akan memanggil fungsi ini untuk setiap permintaan HTTP
-func Handler(w http.ResponseWriter, r *http.Request) {
-	// Serahkan semua permintaan ke router Gin yang sudah diinisialisasi
-	router.ServeHTTP(w, r)
-}
-
 
 // --- HANDLER & FUNGSI BANTUAN ---
-// (Semua fungsi handler Anda dari file asli disalin di sini, tanpa perubahan)
 
 // searchCitiesHandler menangani permintaan pencarian kota.
 func searchCitiesHandler(c *gin.Context) {
