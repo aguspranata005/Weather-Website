@@ -106,7 +106,7 @@ func main() {
 
 	// Konfigurasi CORS (Cross-Origin Resource Sharing) untuk mengizinkan permintaan dari frontend.
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173", "https://frontend-production-64b2.up.railway.app/"}
+	config.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173", "https://frontend-production-64b2.up.railway.app"}
 	router.Use(cors.New(config))
 
 	// Grup routing untuk semua endpoint API di bawah prefix /api.
