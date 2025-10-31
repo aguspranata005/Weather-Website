@@ -80,16 +80,5 @@ The frontend will connect to the backend at `http://localhost:8080` by default.
 
 This project is [MIT](https://opensource.org/licenses/MIT) licensed.
 
-## 👥 Authors
-
-- **Agus Pranata** - *Build a weather forecast app* - [aguspranata005](https://github.com/aguspranata005)
-
-## 🙏 Acknowledgments
-
-- OpenWeatherMap API for weather data
-- Material Design for UI components
-- React community for excellent documentation
-- Go community for backend support
-
 ---
 <p align="center">Made with ❤️ Agus Pranata</p>
