@@ -64,6 +64,8 @@ npm run dev
 ### Backend (.env)
 ```env
 OPENWEATHER_API_KEY=your_api_key_here
+
+To obtain an API token from OpenWeather, access the OpenWeather website and register/log in to your account.
 ```
 
 ### Frontend
