@@ -53,7 +53,8 @@ interface AirPollutionResponse {
 }
 
 // --- Konfigurasi & Fungsi Helper (Salin dari file Anda) ---
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const getWeatherIconUrl = (iconCode: string): string => {
   const baseUrl = "https://www.amcharts.com/wp-content/themes/amcharts4/css/img/icons/weather/animated/";
   let iconName: string;
